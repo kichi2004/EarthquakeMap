@@ -31,6 +31,7 @@
             this.infoType = new System.Windows.Forms.Label();
             this.kyoshinMonitor = new System.Windows.Forms.PictureBox();
             this.mainPicbox = new System.Windows.Forms.PictureBox();
+            this.detailTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.kyoshinMonitor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).BeginInit();
             this.SuspendLayout();
@@ -51,7 +52,7 @@
             this.infoType.Font = new System.Drawing.Font("Yu Gothic UI", 27.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.infoType.Location = new System.Drawing.Point(2, 41);
             this.infoType.Name = "infoType";
-            this.infoType.Size = new System.Drawing.Size(218, 51);
+            this.infoType.Size = new System.Drawing.Size(218, 49);
             this.infoType.TabIndex = 1;
             this.infoType.Text = "各地の震度";
             this.infoType.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -60,7 +61,7 @@
             // 
             this.kyoshinMonitor.BackgroundImage = global::AllInformationViewer2.Properties.Resources.basemap_new_black;
             this.kyoshinMonitor.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.kyoshinMonitor.Location = new System.Drawing.Point(0, 90);
+            this.kyoshinMonitor.Location = new System.Drawing.Point(0, 185);
             this.kyoshinMonitor.Name = "kyoshinMonitor";
             this.kyoshinMonitor.Size = new System.Drawing.Size(220, 250);
             this.kyoshinMonitor.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -69,18 +70,29 @@
             // 
             // mainPicbox
             // 
-            this.mainPicbox.BackColor = System.Drawing.Color.DarkTurquoise;
+            this.mainPicbox.BackColor = System.Drawing.Color.Aquamarine;
             this.mainPicbox.Location = new System.Drawing.Point(219, 0);
             this.mainPicbox.Name = "mainPicbox";
-            this.mainPicbox.Size = new System.Drawing.Size(523, 340);
+            this.mainPicbox.Size = new System.Drawing.Size(523, 435);
             this.mainPicbox.TabIndex = 3;
             this.mainPicbox.TabStop = false;
+            // 
+            // detailTextBox
+            // 
+            this.detailTextBox.BackColor = System.Drawing.Color.LightGray;
+            this.detailTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.detailTextBox.Location = new System.Drawing.Point(0, 90);
+            this.detailTextBox.Multiline = true;
+            this.detailTextBox.Name = "detailTextBox";
+            this.detailTextBox.Size = new System.Drawing.Size(220, 98);
+            this.detailTextBox.TabIndex = 4;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(742, 340);
+            this.ClientSize = new System.Drawing.Size(742, 435);
+            this.Controls.Add(this.detailTextBox);
             this.Controls.Add(this.mainPicbox);
             this.Controls.Add(this.kyoshinMonitor);
             this.Controls.Add(this.infoType);
@@ -93,6 +105,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kyoshinMonitor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -102,6 +115,7 @@
         private System.Windows.Forms.Label infoType;
         private System.Windows.Forms.PictureBox kyoshinMonitor;
         private System.Windows.Forms.PictureBox mainPicbox;
+        private System.Windows.Forms.TextBox detailTextBox;
     }
 }
 

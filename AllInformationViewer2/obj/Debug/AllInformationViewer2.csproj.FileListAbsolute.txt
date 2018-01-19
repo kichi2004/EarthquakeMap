@@ -1,6 +1,13 @@
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\AllInformationViewer2.exe.config
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\AllInformationViewer2.exe
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\AllInformationViewer2.pdb
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\EarthquakeLibrary.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\System.ValueTuple.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\HtmlAgilityPack.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\EarthquakeLibrary.pdb
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\System.ValueTuple.xml
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\HtmlAgilityPack.pdb
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\HtmlAgilityPack.xml
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.csprojResolveAssemblyReference.cache
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.Form1.resources
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.Properties.Resources.resources
