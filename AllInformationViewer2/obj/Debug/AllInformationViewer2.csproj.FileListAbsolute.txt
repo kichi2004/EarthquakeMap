@@ -15,3 +15,9 @@ D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformat
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.csproj.CoreCompileInputs.cache
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.exe
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.pdb
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\kmoni.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\MessagePack.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\protobuf-net.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\System.Threading.Tasks.Extensions.dll
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\kmoni.pdb
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.exe.config

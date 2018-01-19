@@ -39,9 +39,15 @@
     <Reference Include="EarthquakeLibrary">
       <HintPath>..\..\EarthquakeLibrary\EarthquakeLibrary\bin\Release\EarthquakeLibrary.dll</HintPath>
     </Reference>
+    <Reference Include="kmoni">
+      <HintPath>..\..\KyoshinMonitorLib-master\src\KyoshinMonitorLib\bin\Release\net46\kmoni.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -96,6 +102,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\basemap_new_black.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\logo_anied.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
