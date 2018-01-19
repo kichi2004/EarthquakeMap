@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Timers;
-
-using Timer = System.Timers.Timer;
 
 namespace AllInformationViewer2
 {
@@ -29,23 +20,27 @@ namespace AllInformationViewer2
 
         private async void Initialize()
         {
-            var timer = new Timer(100);
-            timer.Elapsed += this.TimerElapsed;
+            var timer = new Timer() {
+                Interval = 100
+            };
+            timer.Tick += this.TimerElapsed;
             //TODO: 例外処理
             await SetTime();
             timer.Start();
         }
 
-        private async void TimerElapsed(object sender, ElapsedEventArgs e)
+        private async void TimerElapsed(object sender, EventArgs e)
         {
             DateTime time;
             if (_now.Minute % 10 == 0 &&
                 _now.Second == 0 && _now.Millisecond <= 100) {
                 await SetTime();
-            } else {
-                _now = _now.AddMilliseconds(100);
-            }
-            time = _now;
+            } else
+                _now = _now.AddSeconds(0.1);
+            
+            //時刻補正
+            time = _now.AddSeconds(0.1);
+            Console.WriteLine(time.ToString("HH:mm:ss.ff"));
             if (time.Millisecond > 100) return;
 
             this.BeginInvoke( new Action(() =>
@@ -55,10 +50,10 @@ namespace AllInformationViewer2
             string kmoniUrl = 
                 $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
                 $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
+            Console.WriteLine("monitor url: "+ kmoniUrl);
             var kmoniImage = await DownloadImageAsync(kmoniUrl);
             //できれば予測震度とか載せたいけどとりあえず放置
             kyoshinMonitor.Image = kmoniImage;
-
 
         }
 

@@ -58,14 +58,18 @@
             // 
             // kyoshinMonitor
             // 
+            this.kyoshinMonitor.BackgroundImage = global::AllInformationViewer2.Properties.Resources.basemap_new_black;
+            this.kyoshinMonitor.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.kyoshinMonitor.Location = new System.Drawing.Point(0, 90);
             this.kyoshinMonitor.Name = "kyoshinMonitor";
             this.kyoshinMonitor.Size = new System.Drawing.Size(220, 250);
+            this.kyoshinMonitor.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.kyoshinMonitor.TabIndex = 2;
             this.kyoshinMonitor.TabStop = false;
             // 
             // mainPicbox
             // 
+            this.mainPicbox.BackColor = System.Drawing.Color.DarkTurquoise;
             this.mainPicbox.Location = new System.Drawing.Point(219, 0);
             this.mainPicbox.Name = "mainPicbox";
             this.mainPicbox.Size = new System.Drawing.Size(523, 340);
@@ -82,9 +86,10 @@
             this.Controls.Add(this.infoType);
             this.Controls.Add(this.nowtime);
             this.Font = new System.Drawing.Font("Yu Gothic UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "All Information Viewer 2";
             ((System.ComponentModel.ISupportInitialize)(this.kyoshinMonitor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).EndInit();
             this.ResumeLayout(false);
