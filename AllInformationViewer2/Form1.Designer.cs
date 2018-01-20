@@ -61,7 +61,7 @@
             // 
             this.detailTextBox.BackColor = System.Drawing.Color.LightGray;
             this.detailTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.detailTextBox.Font = new System.Drawing.Font("Yu Gothic UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.detailTextBox.Font = new System.Drawing.Font("Yu Gothic UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.detailTextBox.Location = new System.Drawing.Point(0, 90);
             this.detailTextBox.Multiline = true;
             this.detailTextBox.Name = "detailTextBox";
@@ -82,10 +82,10 @@
             // 
             // mainPicbox
             // 
-            this.mainPicbox.BackColor = System.Drawing.Color.Aquamarine;
-            this.mainPicbox.Location = new System.Drawing.Point(219, 0);
+            this.mainPicbox.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.mainPicbox.Location = new System.Drawing.Point(220, 0);
             this.mainPicbox.Name = "mainPicbox";
-            this.mainPicbox.Size = new System.Drawing.Size(523, 435);
+            this.mainPicbox.Size = new System.Drawing.Size(773, 435);
             this.mainPicbox.TabIndex = 3;
             this.mainPicbox.TabStop = false;
             // 
@@ -104,7 +104,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(742, 435);
+            this.ClientSize = new System.Drawing.Size(993, 435);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.detailTextBox);
             this.Controls.Add(this.mainPicbox);
