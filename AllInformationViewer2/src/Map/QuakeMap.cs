@@ -194,7 +194,7 @@ namespace AllInformationViewer2.Map
                     var cutHeight = 810;
 
                     // 中心を設定
-                    var filtered = areaStored;
+                    var filtered = areaPixel;
                     if (epicenter[0] != 0.0f)   // 震度速報でない
                     {
                         filtered.Add(epicenter, "E");
@@ -209,7 +209,7 @@ namespace AllInformationViewer2.Map
 
                     // 地図を縮小
                     var areaIntSize = 36f;
-                    var cityIntSize = 24f;
+                    //var cityIntSize = 24f;
                     var zoomRate = 1f;
                     var diffWidth = filtered.Max(x => x.Key[0]) - filtered.Min(x => x.Key[0]);
                     var diffHeight = filtered.Max(x => x.Key[1]) - filtered.Min(x => x.Key[1]);
@@ -265,11 +265,8 @@ namespace AllInformationViewer2.Map
                     //var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
                     var orgAreaGraphics = Graphics.FromImage(orgAreaBitmap);
                     //var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
-                    orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Base.png"),
-                        0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
                     using (var image = Image.FromFile(ImagePath + "Base.png"))
-                        //orgCityGraphics.DrawImage(image,
-                        orgAreaGraphics.DrawImage(image,
+                    orgAreaGraphics.DrawImage(image,
                             0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
                     if (info.InformationType == InformationType.EpicenterInfo)
                         orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
@@ -280,7 +277,8 @@ namespace AllInformationViewer2.Map
                     foreach (var pixel in areaPixel) { 
                         if (imageAreaList.ContainsKey(pixel.Value)) {
                             orgAreaGraphics.DrawImage(imageAreaList[pixel.Value],
-                                pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);
+                                //pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);
+                                pixel.Key[0] - areaIntSize / 2 + adjustX, pixel.Key[1] - areaIntSize / 2 + adjustY, areaIntSize, areaIntSize);
                         }
                     }
                     orgAreaGraphics.Dispose();

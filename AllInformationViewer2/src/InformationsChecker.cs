@@ -17,6 +17,7 @@ namespace AllInformationViewer2
 
         private static int _lastnum;
         private static string _lastId;
+
         private static NewEarthquakeInformation _lastinfo;
 
         internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false)
@@ -31,7 +32,7 @@ namespace AllInformationViewer2
             var info = !forceInfo && time.Second % 20 != 0 ? null :
                 await Information.GetNewEarthquakeInformationFromYahooAsync(
                 //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20110311144600.html"
-                "https://typhoon.yahoo.co.jp/weather/jp/earthquake/20161122055652.html" //震度速報
+                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20161122055652.html" //震度速報
                 );
             //変化あるか確認
             if (info != null) {
@@ -50,6 +51,7 @@ namespace AllInformationViewer2
             if (!infoflag && eewobj.result.message != "データがありません") {
                 int num = int.Parse(eewobj.report_num);
                 string id = eewobj.report_id;
+                
                 if (num != _lastnum || _lastId != id) {
                     _lastnum = num;
                     _lastId = id;
@@ -70,8 +72,8 @@ namespace AllInformationViewer2
                         Number = num,
                         EstShindo = Form1.observationPoints.ParseIntensityFromImage(await task)
                     };
-                    LatestEew = eew;
                     eewflag = true;
+                    LatestEew = eew;
                 }
             }
             //差分なし
