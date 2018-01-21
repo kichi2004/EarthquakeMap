@@ -31,7 +31,7 @@ namespace AllInformationViewer2.Enums
         /// <summary>
         /// 震度5弱
         /// </summary>
-        internal static Intensity Int5Minus => new Intensity("5弱", "震度5弱", 5);
+        internal static Intensity Int5Minus => new Intensity("5-", "震度5弱", 5);
         /// <summary>
         /// 震度5強
         /// </summary>

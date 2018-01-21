@@ -5,7 +5,7 @@ using AllInformationViewer2.Enums;
 using AllInformationViewer2.Objects;
 using Codeplex.Data;
 using EarthquakeLibrary.Information;
-
+using KyoshinMonitorLib;
 using static AllInformationViewer2.Utilities;
 
 namespace AllInformationViewer2
@@ -30,7 +30,8 @@ namespace AllInformationViewer2
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0 ? null :
                 await Information.GetNewEarthquakeInformationFromYahooAsync(
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20160416012510.html"
+                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20110311144600.html"
+                "https://typhoon.yahoo.co.jp/weather/jp/earthquake/20161122055652.html" //震度速報
                 );
             //変化あるか確認
             if (info != null) {
@@ -52,6 +53,8 @@ namespace AllInformationViewer2
                 if (num != _lastnum || _lastId != id) {
                     _lastnum = num;
                     _lastId = id;
+                    var task = DownloadImageAsync($"http://www.kmoni.bosai.go.jp/new/data/" +
+                    $"map_img/EstShindoImg/eew/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.eew.gif");
                     var eew = new Eew() {
                         IsWarn = eewobj.alertflg == "警報",
                         MaxIntensity = Intensity.Parse(eewobj.calcintensity),
@@ -64,7 +67,8 @@ namespace AllInformationViewer2
                             "yyyyMMddHHmmss", CultureInfo.CurrentCulture, DateTimeStyles.None),
                         Epicenter = eewobj.region_name,
                         AnnouncedTime = DateTime.Parse(eewobj.report_time),
-                        Number = num
+                        Number = num,
+                        EstShindo = Form1.observationPoints.ParseIntensityFromImage(await task)
                     };
                     LatestEew = eew;
                     eewflag = true;

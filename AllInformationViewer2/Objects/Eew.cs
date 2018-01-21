@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AllInformationViewer2.Enums;
+using KyoshinMonitorLib;
 
 namespace AllInformationViewer2.Objects
 {
@@ -49,5 +50,9 @@ namespace AllInformationViewer2.Objects
         /// 最大推定震度
         /// </summary>
         internal Intensity MaxIntensity { get; set; }
+        /// <summary>
+        /// 予測震度
+        /// </summary>
+        internal IEnumerable<ImageAnalysisResult> EstShindo { get; set; }
     }
 }

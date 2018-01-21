@@ -17,8 +17,8 @@ namespace AllInformationViewer2
 {
     public partial class Form1 : Form
     {
+        internal static ObservationPoint[] observationPoints;
         private DateTime _now;
-        private ObservationPoint[] observationPoints;
         private FontFamily _koruriFont;
         private Bitmap _mainBitmap = null;
         private bool _isFirst = true;
@@ -38,16 +38,16 @@ namespace AllInformationViewer2
             observationPoints = ObservationPoint.LoadFromPbf(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points");
 
-            var timer = new Timer() {
-                Interval = 100
+            var timer = new FixedTimer() {
+                Interval = TimeSpan.FromMilliseconds(100)
             };
-            timer.Tick += this.TimerElapsed;
+            timer.Elapsed += this.TimerElapsed;
             //TODO: 例外処理
             await SetTime();
             timer.Start();
         }
-        
-        private async void TimerElapsed(object sender, EventArgs e)
+        private DateTime _time = new DateTime(2016, 4, 16, 1, 25, 00);
+        private async void TimerElapsed()
         {
             DateTime time;
             if (_now.Minute % 10 == 0 &&
@@ -58,16 +58,19 @@ namespace AllInformationViewer2
 
             //時刻補正
             time = _now.AddSeconds(0);
+            Console.WriteLine(time.ToString("HH:mm:ss.fff"));
             if (time.Millisecond > 100) return;
-            Console.WriteLine(time);
             //できれば予測震度とか載せたいけどとりあえず放置
-            this.BeginInvoke(new Action(() => 
+            this.BeginInvoke(new Action(() =>
                 nowtime.Text = _now.ToString("HH:mm:ss")));
 
-                var kmoniImage = await GetKyoshinMonitorImageAsync(time);
+            var kmoniImage = await GetKyoshinMonitorImageAsync(time);
+
+            _time = _time.AddSeconds(1);
 
             //EEW・地震情報取得
-            (bool eewflag, bool infoflag) = await InformationsChecker.Get(time, _isFirst);
+            string infotype = null, detailText = null;
+            (bool eewflag, bool infoflag) = await InformationsChecker.Get(_time, _isFirst);
             if (!infoflag && !eewflag) goto last;
             var font1 = new Font(_koruriFont, 20f, FontStyle.Bold);
             var font2 = new Font(_koruriFont, 12f);
@@ -82,74 +85,74 @@ namespace AllInformationViewer2
             var brush = Brushes.White;
             if (infoflag) {
                 var info = InformationsChecker.LatestInformation;
-                infoType.ForeColor = Color.Black;
                 switch (info.InformationType) {
                     case InformationType.SesimicInfo:
-                        infoType.Text = "震度速報";
+                        infotype = "震度速報";
                         break;
                     case InformationType.EpicenterInfo:
-                        infoType.Text = "震源情報";
+                        infotype = "震源情報";
                         break;
                     case InformationType.EarthquakeInfo:
-                        infoType.Text = "各地の震度";
+                        infotype = "各地の震度";
                         break;
                     default:
                         goto last;
                 }
                 //地図描画
                 using (var bmp = await Task.Run(() => Map.QuakeMap.Draw()))
-                    g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                    if (bmp != null) g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                bool isDetail = info.InformationType != InformationType.SesimicInfo;
                 //文字描画
-                g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 239, 120);
+                g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10,
+                    isDetail ? 260 : 190, isDetail ? 120 : 40);
                 g.DrawString($"{info.Origin_time:H時mm分}ごろ", font3, brush, 12, 12);
-                g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
-                g.DrawString(info.Epicenter, font2, brush, new Point(102, 44));
-                g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
-                g.DrawString($"{(info.Depth != null ? $"{info.Depth}km" : "ごく浅い")}", font2, brush, new Point(102, 64));
-                g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
-                g.DrawString($"M{info.Magnitude:0.0}", font2, brush, new Point(102, 84));
-                g.DrawString($"最大震度", font2, brush, new Point(25, 104));
-                g.DrawString(info.MaxIntensity.ToLongString().Replace("震度", ""), font2, brush, new Point(102, 104));
-
+                if (isDetail) {
+                    g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
+                    g.DrawString(info.Epicenter, font2, brush, new Point(102, 44));
+                    g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
+                    g.DrawString($"{(info.Depth != null ? $"{info.Depth}km" : "ごく浅い")}", font2, brush, new Point(102, 64));
+                    g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
+                    g.DrawString($"M{info.Magnitude:0.0}", font2, brush, new Point(102, 84));
+                    g.DrawString($"最大震度", font2, brush, new Point(25, 104));
+                    g.DrawString(info.MaxIntensity.ToLongString().Replace("震度", ""), font2, brush, new Point(102, 104));
+                }
                 var sindDetail = new StringBuilder();
-                foreach(var sind1 in info.Shindo) {
+                foreach (var sind1 in info.Shindo) {
                     sindDetail.Append($"［{sind1.Intensity.ToLongString()}］");
                     var places = sind1.Place.SelectMany(x => x.Place);
                     sindDetail.AppendLine(string.Join(" ", places));
                 }
-                detailTextBox.Text = sindDetail.ToString();
-                
+                detailText = sindDetail.ToString();
             } else if (eewflag) {
                 var eew = InformationsChecker.LatestEew;
-                infoType.Text = "緊急地震速報";
-                infoType.ForeColor = eew.IsLast ? Color.Red : Color.Black;
+                infotype = eew.IsWarn ? "警報" : "予報";
                 Console.WriteLine($"緊急地震速報(第{eew.Number}報) {eew.Epicenter} " +
                     $"{eew.Depth}km M{eew.Magnitude} {eew.MaxIntensity.LongString}");
                 string max = eew.MaxIntensity.LongString.Replace("震度", "").Replace("1", "１").Replace("2", "２")
                     .Replace("3", "３").Replace("4", "４").Replace("5", "５").Replace("6", "６").Replace("7", "７");
                 //EEW予測震度画像を取得・解析
-                var estImage = await DownloadImageAsync($"http://www.kmoni.bosai.go.jp/new/data/" +
-                    $"map_img/EstShindoImg/eew/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.eew.gif");
-                var result = observationPoints.ParseIntensityFromImage(estImage);
+                var estShindo = eew.EstShindo;
                 string mypResult = "";
-                var myPoint = result.FirstOrDefault(x => x.Region == "福岡県" && x.Name == "福岡");
+                var myPoint = estShindo.FirstOrDefault(x => x.Region == "福岡県" && x.Name == "福岡");
                 if (myPoint != null) {
                     var val = myPoint.AnalysisResult;
                     mypResult = $"{myPoint.Region} {myPoint.Name}\r\n" +
                         $"推定震度: {Intensity.FromValue(val ?? 0).LongString.Replace("震度", "")} " +
                         $"({val:0.0})";
                 }
-                result = result.Where(x => x.AnalysisResult > 0.4);
-                var maxint = result.Max(y => y.AnalysisResult) ?? 0;
-                var max_points = result.Where(x => x.AnalysisResult == maxint);
+                estShindo = estShindo.Where(x => x.AnalysisResult > 0.4);
+                var maxint = estShindo.Max(y => y.AnalysisResult) ?? 0;
+                var max_points = estShindo.Where(x => x.AnalysisResult == maxint);
                 var maxpt_str = string.Join(
                     ", ", max_points.Select(x => $"{x.Region} {x.Name}").Distinct().ToArray());
                 var detail = $"{mypResult}\r\n" +
                     $"最大震度: {Intensity.FromValue(maxint).LongString.Replace("震度", "")} ({maxint:0.0})\r\n{maxpt_str}";
-                detailTextBox.Text = detail;
+                detailText = detail;
                 //地図描画
+                using (var bmp = await Map.EewMap.Draw())
+                    g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                 //文字描画
-                g.FillRectangle(Brushes.Yellow, 8, 10, 239, 120);
+                g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 260, 120);
                 g.DrawString($"最大震度 {max}", font1, brush, new Rectangle(10, 12, 230, 39), format);
                 g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
                 g.DrawString(eew.Epicenter, font2, brush, new Point(102, 44));
@@ -165,20 +168,33 @@ namespace AllInformationViewer2
             last:
             _isFirst = false;
             //フォーム関連は最後にまとめて
-            this.BeginInvoke(new Action(() => {
-                if(kmoniImage != null) kyoshinMonitor.Image = kmoniImage;
+            this.Invoke(new Action(() => {
+                if (kmoniImage != null) kyoshinMonitor.Image = kmoniImage;
                 if (eewflag || infoflag) SwapImage(_mainBitmap);
+                if (infotype != null) {
+                    if (infotype == "警報") {
+                        infoType.ForeColor = Color.Red;
+                        infoType.Text = "緊急地震速報";
+                        detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 12f, FontStyle.Regular);
+                    } else if (infotype == "予報") {
+                        infoType.ForeColor = Color.Black;
+                        infoType.Text = "緊急地震速報";
+                        detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 12f, FontStyle.Regular);
+                    } else {
+                        infoType.Text = infotype;
+                        detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 10f, FontStyle.Regular);
+                    }
+                }
+                if (detailText != null) detailTextBox.Text = detailText;
             }));
         }
-
+        
         private void SwapImage(Bitmap image)
         {
             var old = mainPicbox.Image;
             mainPicbox.Image = image;
-            if(old != null) {
-                old.Dispose();
-                old = null;
-            }
+            //old?.Dispose();
+            old = null;
         }
 
         /// <summary>
@@ -201,7 +217,7 @@ namespace AllInformationViewer2
             }
             return res;
         }
-        
+
         /// <summary>
         /// 時刻を合わせます。
         /// </summary>
