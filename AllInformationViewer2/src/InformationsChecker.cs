@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
 using AllInformationViewer2.Enums;
@@ -17,9 +18,7 @@ namespace AllInformationViewer2
 
         private static int _lastnum;
         private static string _lastId;
-
-        private static NewEarthquakeInformation _lastinfo;
-
+        //private static bool a = true;
         internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false)
         {
             //新強震取得
@@ -31,21 +30,23 @@ namespace AllInformationViewer2
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0 ? null :
                 await Information.GetNewEarthquakeInformationFromYahooAsync(
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20110311144600.html"
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20161122055652.html" //震度速報
+                //a ? "https://typhoon.yahoo.co.jp/weather/jp/earthquake/20180122012716.html" 
+                //: "https://typhoon.yahoo.co.jp/weather/jp/earthquake/20180122012434.html"
                 );
+            //a = false;
             //変化あるか確認
             if (info != null) {
-                if((_lastinfo == null ||
-                info.Epicenter != _lastinfo.Epicenter ||
-                info.Depth != _lastinfo.Depth ||
-                info.Magnitude != _lastinfo.Magnitude ||
-                info.Announced_time != _lastinfo.Announced_time ||
-                info.Origin_time != _lastinfo.Origin_time)) {
+                if((LatestInformation == null ||
+                info.Origin_time != LatestInformation.Origin_time ||
+                info.Announced_time != LatestInformation.Announced_time ||
+                info.Epicenter != LatestInformation.Epicenter ||
+                info.Magnitude != LatestInformation.Magnitude ||
+                info.Depth != LatestInformation.Depth ||
+                info.InformationType != LatestInformation.InformationType || 
+                !info.Shindo.SequenceEqual(LatestInformation.Shindo))) {
                     infoflag = true;
                     LatestInformation = info;
                 }
-                _lastinfo = info;
             }
 
             if (!infoflag && eewobj.result.message != "データがありません") {

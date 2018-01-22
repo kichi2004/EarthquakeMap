@@ -66,6 +66,7 @@
             this.detailTextBox.Multiline = true;
             this.detailTextBox.Name = "detailTextBox";
             this.detailTextBox.ReadOnly = true;
+            this.detailTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.detailTextBox.Size = new System.Drawing.Size(220, 98);
             this.detailTextBox.TabIndex = 4;
             // 

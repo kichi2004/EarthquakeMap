@@ -95,7 +95,9 @@ namespace AllInformationViewer2
             try {
                 //↓_timeでテスト用
                 (eewflag, infoflag) = await InformationsChecker.Get(time, _isFirst);
+                _isFirst = false;
             } catch {
+                _isFirst = false;
                 goto last;
             }
             if (!infoflag && !eewflag) goto last;
@@ -216,7 +218,6 @@ namespace AllInformationViewer2
                 Console.WriteLine(e);
             }
             last:
-            _isFirst = false;
             //フォーム関連は最後にまとめて
             this.Invoke(new Action(() => {
                 if (kmoniImage != null) kyoshinMonitor.Image = kmoniImage;
