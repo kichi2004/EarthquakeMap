@@ -35,6 +35,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="EarthquakeLibrary">
       <HintPath>..\..\EarthquakeLibrary\EarthquakeLibrary\bin\Release\EarthquakeLibrary.dll</HintPath>
@@ -121,4 +124,7 @@
     <Folder Include="src\Forms\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Release\ForRelease.exe"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

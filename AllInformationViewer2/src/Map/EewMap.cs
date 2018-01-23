@@ -20,7 +20,7 @@ namespace AllInformationViewer2.Map
         private const string ImagePath = @"Images\Jishin\";
 
         private static readonly string[] IntList = { "7", "6強", "6弱", "5強", "5弱", "4", "3", "2", "1" };
-        public static async Task<Bitmap> Draw()
+        public static async Task<Bitmap> Draw(bool filter = true)
         {
             return await Task.Run(() => {
                 var eew = InformationsChecker.LatestEew;
@@ -40,7 +40,7 @@ namespace AllInformationViewer2.Map
 
                 int cutWidth = 1440, cutHeight = 810;
 
-                var filtered = FilterDrawIntensity(pointPixel);
+                var filtered = filter ? FilterDrawIntensity(pointPixel) : pointPixel;
 
                 var xMin = filtered.Min(x => x.Key[0]);
                 var xMax = filtered.Max(x => x.Key[0]);

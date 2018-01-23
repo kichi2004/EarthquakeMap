@@ -23,7 +23,7 @@ namespace AllInformationViewer2.Map
 
         private static readonly string[] IntList = { "7", "6強", "6弱", "5強", "5弱", "震度５弱以上未入電", "4", "3", "2", "1" };
 
-        public static async Task<Bitmap> Draw()
+        public static async Task<Bitmap> Draw(bool filter = true)
         {
             return await Task.Run(() => {
                 var info = InformationsChecker.LatestInformation;
@@ -34,7 +34,9 @@ namespace AllInformationViewer2.Map
                         info.Location.Longitude
                     });
                 //var areaInt = new Dictionary<int, string>();
-                if (info.InformationType == InformationType.EarthquakeInfo) {
+                if (info.InformationType == InformationType.EarthquakeInfo ||
+                info.MaxIntensity == JmaIntensity.Int1 ||
+                    info.MaxIntensity == JmaIntensity.Int2) {
                     var cityInt = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = z,
@@ -58,7 +60,7 @@ namespace AllInformationViewer2.Map
                     var cutHeight = 810;
 
                     // 中心を設定
-                    var filtered = FilterDrawIntensity(cityPixel);
+                    var filtered = filter ? FilterDrawIntensity(cityPixel) : cityPixel;
                     if (epicenter[0] != 0.0f)   // 震度速報でない
                     {
                         filtered.Add(epicenter, "E");
@@ -169,8 +171,7 @@ namespace AllInformationViewer2.Map
                     //saveAreaGraphics.Dispose();
                     saveCityGraphics.Dispose();
                     return saveCityBitmap;
-                } 
-                else {
+                } else {
                     var areaInt = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = z,
@@ -194,7 +195,7 @@ namespace AllInformationViewer2.Map
                     var cutHeight = 810;
 
                     // 中心を設定
-                    var filtered = areaPixel;
+                    var filtered = filter ? FilterDrawIntensity(areaPixel) : areaPixel;
                     if (epicenter[0] != 0.0f)   // 震度速報でない
                     {
                         filtered.Add(epicenter, "E");
@@ -266,15 +267,15 @@ namespace AllInformationViewer2.Map
                     var orgAreaGraphics = Graphics.FromImage(orgAreaBitmap);
                     //var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
                     using (var image = Image.FromFile(ImagePath + "Base.png"))
-                    orgAreaGraphics.DrawImage(image,
-                            0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
+                        orgAreaGraphics.DrawImage(image,
+                                0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
                     if (info.InformationType == InformationType.EpicenterInfo)
                         orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                             epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
                     //orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                     //    epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
                     //foreach (var pixel in cityPixel) {
-                    foreach (var pixel in areaPixel) { 
+                    foreach (var pixel in areaPixel) {
                         if (imageAreaList.ContainsKey(pixel.Value)) {
                             orgAreaGraphics.DrawImage(imageAreaList[pixel.Value],
                                 //pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);

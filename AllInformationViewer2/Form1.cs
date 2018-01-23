@@ -78,14 +78,14 @@ namespace AllInformationViewer2
                 _now = _now.AddSeconds(0.1);
 
             //時刻補正
-            time = _now.AddSeconds(0);
+            time = _now;
             Console.WriteLine(time.ToString("HH:mm:ss.fff"));
             if (time.Millisecond > 100) return;
             //できれば予測震度とか載せたいけどとりあえず放置
             this.BeginInvoke(new Action(() =>
                 nowtime.Text = _now.ToString("HH:mm:ss")));
 
-            var kmoniImage = await GetKyoshinMonitorImageAsync(time);
+            var kmoniImage = await GetKyoshinMonitorImageAsync(time.AddSeconds(-1));
 
             //_time = _time.AddSeconds(1);
 
@@ -217,6 +217,7 @@ namespace AllInformationViewer2
                 MessageBox.Show("地図描画に失敗しました。", "失敗", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Console.WriteLine(e);
             }
+            goto last;
             last:
             //フォーム関連は最後にまとめて
             this.Invoke(new Action(() => {
