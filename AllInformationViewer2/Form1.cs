@@ -140,12 +140,12 @@ namespace AllInformationViewer2
                         g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
                         g.DrawString(info.Epicenter, font2, brush, new Point(102, 44));
                         g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
-                        g.DrawString($"{(info.Depth != null ? $"{info.Depth}km" : "ごく浅い")}", font2, brush, new Point(102, 64));
+                        g.DrawString(info.Depth != 0 ? $"{info.Depth}km" : "ごく浅い", font2, brush, new Point(102, 64));
                         g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
                         g.DrawString($"M{info.Magnitude:0.0}", font2, brush, new Point(102, 84));
                         g.DrawString($"最大震度", font2, brush, new Point(25, 104));
                         g.DrawString(info.MaxIntensity.ToLongString().Replace("震度", ""), font2, brush, new Point(102, 104));
-                    }
+                    } 
                     var sindDetail = new StringBuilder();
                     foreach (var sind1 in info.Shindo) {
                         sindDetail.Append($"［{sind1.Intensity.ToLongString()}］");
@@ -233,6 +233,7 @@ namespace AllInformationViewer2
                         infoType.Text = "緊急地震速報";
                         detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 12f, FontStyle.Regular);
                     } else {
+                        infoType.ForeColor = Color.Black;
                         infoType.Text = infotype;
                         detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 10f, FontStyle.Regular);
                     }

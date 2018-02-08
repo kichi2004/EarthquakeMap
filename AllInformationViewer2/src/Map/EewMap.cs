@@ -41,11 +41,11 @@ namespace AllInformationViewer2.Map
                 int cutWidth = 1440, cutHeight = 810;
 
                 var filtered = filter ? FilterDrawIntensity(pointPixel) : pointPixel;
+                var xMin = filtered.Any() ? filtered.Min(x => x.Key[0]) : lat;
+                var xMax = filtered.Any() ? filtered.Max(x => x.Key[0]) : lat;
+                var yMin = filtered.Any() ? filtered.Min(x => x.Key[1]) : lon;
+                var yMax = filtered.Any() ? filtered.Max(x => x.Key[1]) : lon;
 
-                var xMin = filtered.Min(x => x.Key[0]);
-                var xMax = filtered.Max(x => x.Key[0]);
-                var yMin = filtered.Min(x => x.Key[1]);
-                var yMax = filtered.Max(x => x.Key[1]);
                 var centerX = (xMin + xMax) / 2;
                 var centerY = (yMin + yMax) / 2;
 
@@ -53,8 +53,8 @@ namespace AllInformationViewer2.Map
                 var areaIntSize = 36f;
                 var cityIntSize = 24f;
                 var zoomRate = 1f;
-                var diffWidth = filtered.Max(x => x.Key[0]) - filtered.Min(x => x.Key[0]);
-                var diffHeight = filtered.Max(x => x.Key[1]) - filtered.Min(x => x.Key[1]);
+                var diffWidth = xMax - xMin;
+                var diffHeight = yMax - yMin;
                 if (diffHeight + areaIntSize * 2 > cutHeight) {
                     zoomRate = diffHeight / cutHeight;
                     cutHeight = (int)Ceiling(diffHeight + areaIntSize * zoomRate * 2);
@@ -77,7 +77,6 @@ namespace AllInformationViewer2.Map
                     //imageAreaList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
                     imageCityList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
                 }
-
                 // 地図の範囲外であった場合、拡張する
                 var orgX = (int)Ceiling(centerX) - cutWidth / 2;
                 var adjustX = 0;
@@ -101,7 +100,6 @@ namespace AllInformationViewer2.Map
                         orgY -= orgY + cutHeight - ImageHeight;
                     }
                 }
-
                 // 描画
                 //var orgAreaBitmap = new Bitmap(ImageWidth, ImageHeight);
                 var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
