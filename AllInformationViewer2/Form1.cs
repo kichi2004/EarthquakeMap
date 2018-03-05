@@ -43,8 +43,8 @@ namespace AllInformationViewer2
             var pfc = new PrivateFontCollection();
             pfc.AddFontFile("Koruri-Regular.ttf");
             _koruriFont = pfc.Families[0];
-            observationPoints = ObservationPoint.LoadFromPbf(
-                Directory.GetCurrentDirectory() + @"\lib\kyoshin_points");
+            observationPoints = ObservationPoint.LoadFromMpk(
+                Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
             var timer = new FixedTimer() {
                 Interval = TimeSpan.FromMilliseconds(100)
@@ -94,6 +94,7 @@ namespace AllInformationViewer2
             (bool eewflag, bool infoflag) = (false, false);
             try {
                 //↓_timeでテスト用
+                //var _time = new DateTime(2018, 1, 5, 11, 3, 0);
                 (eewflag, infoflag) = await InformationsChecker.Get(time, _isFirst);
                 _isFirst = false;
             } catch {
