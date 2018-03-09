@@ -33,8 +33,8 @@ namespace AllInformationViewer2.Map
                         info.Location.Latitude,
                         info.Location.Longitude
                     });
-                //var areaInt = new Dictionary<int, string>();
-                if (info.InformationType == InformationType.EarthquakeInfo ||
+                if (!Settings.Default.cityToArea &&
+                info.InformationType == InformationType.EarthquakeInfo ||
                 info.MaxIntensity == JmaIntensity.Int1 ||
                     info.MaxIntensity == JmaIntensity.Int2) {
                     var cityInt = info.Shindo
@@ -53,7 +53,6 @@ namespace AllInformationViewer2.Map
                     }
 
                     // ピクセル座標に変換
-                    //var areaPixel = new Dictionary<float[], string>();
                     var cityPixel = citySorted.ToDictionary(x => ToPixelCoordinate(x.Key), x => x.Value);
 
                     var cutWidth = 1440;
@@ -91,14 +90,11 @@ namespace AllInformationViewer2.Map
                     }
                     var epiSize = 80f;
                     epiSize = (int)Ceiling(epiSize * zoomRate);
-                    //areaIntSize = (int)Ceiling(areaIntSize * zoomRate);
                     cityIntSize = (int)Ceiling(cityIntSize * zoomRate);
 
                     // 画像読み込み
-                    //var imageAreaList = new Dictionary<string, Bitmap>();
                     var imageCityList = new Dictionary<string, Bitmap>();
                     foreach (var intensity in IntList.Reverse()) {
-                        //imageAreaList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
                         imageCityList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
                     }
 
@@ -127,56 +123,46 @@ namespace AllInformationViewer2.Map
                     }
 
                     // 描画
-                    //var orgAreaBitmap = new Bitmap(ImageWidth, ImageHeight);
                     var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
-                    //var orgAreaGraphics = Graphics.FromImage(orgAreaBitmap);
                     var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
-                    //orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Base.png"),
-                    //    0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
                     using (var image = Image.FromFile(ImagePath + "Base.png"))
                         orgCityGraphics.DrawImage(image,
                             0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
-                    //orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
-                    //    epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
+                    //震源描画
                     orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                         epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
+                    //震度描画
                     foreach (var pixel in cityPixel) {
                         if (imageCityList.ContainsKey(pixel.Value)) {
                             orgCityGraphics.DrawImage(imageCityList[pixel.Value],
                                 pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);
                         }
                     }
-                    //orgAreaGraphics.Dispose();
                     orgCityGraphics.Dispose();
 
                     // 切り取り
-                    //var cutAreaBitmap = new Bitmap(cutWidth, cutHeight);
                     var cutCityBitmap = new Bitmap(cutWidth, cutHeight);
-                    //var cutAreaGraphics = Graphics.FromImage(cutAreaBitmap);
                     var cutCityGraphics = Graphics.FromImage(cutCityBitmap);
-                    //cutAreaGraphics.FillRectangle(new SolidBrush(Color.FromArgb(32, 32, 32)), new Rectangle(0, 0, cutWidth, cutHeight));
                     cutCityGraphics.FillRectangle(new SolidBrush(Color.FromArgb(32, 32, 32)), new Rectangle(0, 0, cutWidth, cutHeight));
-                    //cutAreaGraphics.DrawImage(orgAreaBitmap, new Rectangle(0, 0, cutWidth, cutHeight), new Rectangle(orgX, orgY, cutWidth, cutHeight), GraphicsUnit.Pixel);
                     cutCityGraphics.DrawImage(orgCityBitmap, new Rectangle(0, 0, cutWidth, cutHeight), new Rectangle(orgX, orgY, cutWidth, cutHeight), GraphicsUnit.Pixel);
-                    //orgAreaBitmap.Dispose();
                     orgCityBitmap.Dispose();
-                    //cutAreaGraphics.Dispose();
                     cutCityGraphics.Dispose();
 
                     // 保存
-                    //var saveAreaBitmap = new Bitmap(cutAreaBitmap, SaveWidth, SaveHeight);
                     var saveCityBitmap = new Bitmap(cutCityBitmap, SaveWidth, SaveHeight);
-                    //var saveAreaGraphics = Graphics.FromImage(saveAreaBitmap);
                     var saveCityGraphics = Graphics.FromImage(saveCityBitmap);
-                    //saveAreaGraphics.Dispose();
                     saveCityGraphics.Dispose();
                     return saveCityBitmap;
                 } else {
-                    var areaInt = info.Shindo
+                    var areaInt_ = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
-                            Place = z,
+                            Place = info.InformationType == InformationType.EarthquakeInfo ? Form1._cityToArea[z] : z,
                             Intensity = x.Intensity.ToLongString().Replace("震度", "")
-                        }))).ToDictionary(city => city.Place, city => city.Intensity);
+                        })));
+                    var areaInt = new Dictionary<string, string>();
+                    foreach (var ai in areaInt_.Where(x => !areaInt.ContainsKey(x.Place)))
+                        areaInt.Add(ai.Place, ai.Intensity);
+                    
                     var areaStored = new Dictionary<float[], string>();
                     areaInt = areaInt.OrderBy(x => x.Value, new IntensityComparer())
                     .ToDictionary(x => x.Key, x => x.Value);
@@ -189,7 +175,6 @@ namespace AllInformationViewer2.Map
 
                     // ピクセル座標に変換
                     var areaPixel = areaStored.ToDictionary(x => ToPixelCoordinate(x.Key), x => x.Value);
-                    //var cityPixel = citySorted.ToDictionary(x => ToPixelCoordinate(x.Key), x => x.Value);
 
                     var cutWidth = 1440;
                     var cutHeight = 810;
@@ -227,14 +212,11 @@ namespace AllInformationViewer2.Map
                     var epiSize = 80f;
                     epiSize = (int)Ceiling(epiSize * zoomRate);
                     areaIntSize = (int)Ceiling(areaIntSize * zoomRate);
-                    //cityIntSize = (int)Ceiling(cityIntSize * zoomRate);
 
                     // 画像読み込み
                     var imageAreaList = new Dictionary<string, Bitmap>();
-                    //var imageCityList = new Dictionary<string, Bitmap>();
                     foreach (var intensity in IntList.Reverse()) {
-                        imageAreaList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
-                        //imageCityList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
+                        imageAreaList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
                     }
 
                     // 地図の範囲外であった場合、拡張する
@@ -263,49 +245,35 @@ namespace AllInformationViewer2.Map
 
                     // 描画
                     var orgAreaBitmap = new Bitmap(ImageWidth, ImageHeight);
-                    //var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
                     var orgAreaGraphics = Graphics.FromImage(orgAreaBitmap);
-                    //var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
                     using (var image = Image.FromFile(ImagePath + "Base.png"))
                         orgAreaGraphics.DrawImage(image,
                                 0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
-                    if (info.InformationType == InformationType.EpicenterInfo)
+
+                    //震源描画
+                    if (info.InformationType != InformationType.SesimicInfo)
                         orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                             epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
-                    //orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
-                    //    epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
-                    //foreach (var pixel in cityPixel) {
+                    //震度描画
                     foreach (var pixel in areaPixel) {
                         if (imageAreaList.ContainsKey(pixel.Value)) {
                             orgAreaGraphics.DrawImage(imageAreaList[pixel.Value],
-                                //pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);
                                 pixel.Key[0] - areaIntSize / 2 + adjustX, pixel.Key[1] - areaIntSize / 2 + adjustY, areaIntSize, areaIntSize);
                         }
                     }
+
                     orgAreaGraphics.Dispose();
-                    //orgCityGraphics.Dispose();
 
                     // 切り取り
                     var cutAreaBitmap = new Bitmap(cutWidth, cutHeight);
-                    //var cutCityBitmap = new Bitmap(cutWidth, cutHeight);
                     var cutAreaGraphics = Graphics.FromImage(cutAreaBitmap);
-                    //var cutCityGraphics = Graphics.FromImage(cutCityBitmap);
                     cutAreaGraphics.FillRectangle(new SolidBrush(Color.FromArgb(32, 32, 32)), new Rectangle(0, 0, cutWidth, cutHeight));
-                    //cutCityGraphics.FillRectangle(new SolidBrush(Color.FromArgb(32, 32, 32)), new Rectangle(0, 0, cutWidth, cutHeight));
                     cutAreaGraphics.DrawImage(orgAreaBitmap, new Rectangle(0, 0, cutWidth, cutHeight), new Rectangle(orgX, orgY, cutWidth, cutHeight), GraphicsUnit.Pixel);
-                    //cutCityGraphics.DrawImage(orgCityBitmap, new Rectangle(0, 0, cutWidth, cutHeight), new Rectangle(orgX, orgY, cutWidth, cutHeight), GraphicsUnit.Pixel);
                     orgAreaBitmap.Dispose();
-                    //orgCityBitmap.Dispose();
                     cutAreaGraphics.Dispose();
-                    //cutCityGraphics.Dispose();
 
                     // 保存
                     var saveAreaBitmap = new Bitmap(cutAreaBitmap, SaveWidth, SaveHeight);
-                    //var saveCityBitmap = new Bitmap(cutCityBitmap, SaveWidth, SaveHeight);
-                    //var saveAreaGraphics = Graphics.FromImage(saveAreaBitmap);
-                    //var saveCityGraphics = Graphics.FromImage(saveCityBitmap);
-                    //saveAreaGraphics.Dispose();
-                    //saveCityGraphics.Dispose();
                     return saveAreaBitmap;
                 }
             });
@@ -316,31 +284,22 @@ namespace AllInformationViewer2.Map
             var dictionary = new Dictionary<float[], string>();
             switch (InformationsChecker.LatestInformation.MaxIntensity.ToShortString()) {
                 case "1":
-                    dictionary = intList.Where(x => x.Value == "1").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "2":
-                    dictionary = intList.Where(x => x.Value == "1" || x.Value == "2").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "3":
-                    dictionary = intList.Where(x => x.Value == "1" || x.Value == "2" || x.Value == "3").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "4":
-                    dictionary = intList.Where(x => x.Value == "1" || x.Value == "2" || x.Value == "3" || x.Value == "4").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList;
                     break;
                 case "5-":
-                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "5+":
-                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value == "2" || x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強").ToDictionary(x => x.Key, x => x.Value);
                     break;
                 case "6-":
-                    dictionary = intList.Where(x => x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "6+":
-                    dictionary = intList.Where(x => x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
                     break;
                 case "7":
-                    dictionary = intList.Where(x => x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強" || x.Value == "7").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強" || x.Value == "7").ToDictionary(x => x.Key, x => x.Value);
+                    //dictionary = intList.Where(x => x.Value == "7").ToDictionary(x => x.Key, x => x.Value);
                     break;
             }
             return dictionary;

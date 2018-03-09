@@ -30,12 +30,11 @@
             this.nowtime = new System.Windows.Forms.Label();
             this.infoType = new System.Windows.Forms.Label();
             this.detailTextBox = new System.Windows.Forms.TextBox();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.mainPicbox = new System.Windows.Forms.PictureBox();
-            this.kyoshinMonitor = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.label1 = new System.Windows.Forms.Label();
+            this.myPointCompoBox = new System.Windows.Forms.ComboBox();
+            this.cityToArea = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kyoshinMonitor)).BeginInit();
             this.SuspendLayout();
             // 
             // nowtime
@@ -70,17 +69,6 @@
             this.detailTextBox.Size = new System.Drawing.Size(220, 98);
             this.detailTextBox.TabIndex = 4;
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.BackColor = System.Drawing.Color.White;
-            this.pictureBox1.Image = global::AllInformationViewer2.Properties.Resources.logo_anied;
-            this.pictureBox1.Location = new System.Drawing.Point(96, 394);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(118, 37);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 5;
-            this.pictureBox1.TabStop = false;
-            // 
             // mainPicbox
             // 
             this.mainPicbox.BackColor = System.Drawing.SystemColors.ControlDarkDark;
@@ -90,26 +78,44 @@
             this.mainPicbox.TabIndex = 3;
             this.mainPicbox.TabStop = false;
             // 
-            // kyoshinMonitor
+            // label1
             // 
-            this.kyoshinMonitor.BackgroundImage = global::AllInformationViewer2.Properties.Resources.basemap_new_black;
-            this.kyoshinMonitor.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.kyoshinMonitor.Location = new System.Drawing.Point(0, 185);
-            this.kyoshinMonitor.Name = "kyoshinMonitor";
-            this.kyoshinMonitor.Size = new System.Drawing.Size(220, 250);
-            this.kyoshinMonitor.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.kyoshinMonitor.TabIndex = 2;
-            this.kyoshinMonitor.TabStop = false;
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 379);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(112, 17);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "予測震度表示地点";
+            // 
+            // myPointCompoBox
+            // 
+            this.myPointCompoBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.myPointCompoBox.FormattingEnabled = true;
+            this.myPointCompoBox.Location = new System.Drawing.Point(52, 399);
+            this.myPointCompoBox.Name = "myPointCompoBox";
+            this.myPointCompoBox.Size = new System.Drawing.Size(148, 25);
+            this.myPointCompoBox.TabIndex = 6;
+            // 
+            // cityToArea
+            // 
+            this.cityToArea.AutoSize = true;
+            this.cityToArea.Location = new System.Drawing.Point(10, 355);
+            this.cityToArea.Name = "cityToArea";
+            this.cityToArea.Size = new System.Drawing.Size(107, 21);
+            this.cityToArea.TabIndex = 7;
+            this.cityToArea.Text = "地域ごとに描画";
+            this.cityToArea.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(993, 435);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.cityToArea);
+            this.Controls.Add(this.myPointCompoBox);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.detailTextBox);
             this.Controls.Add(this.mainPicbox);
-            this.Controls.Add(this.kyoshinMonitor);
             this.Controls.Add(this.infoType);
             this.Controls.Add(this.nowtime);
             this.Font = new System.Drawing.Font("Yu Gothic UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
@@ -117,9 +123,7 @@
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Form1";
             this.Text = "All Information Viewer 2";
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kyoshinMonitor)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -129,10 +133,11 @@
 
         private System.Windows.Forms.Label nowtime;
         private System.Windows.Forms.Label infoType;
-        private System.Windows.Forms.PictureBox kyoshinMonitor;
         private System.Windows.Forms.PictureBox mainPicbox;
         private System.Windows.Forms.TextBox detailTextBox;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ComboBox myPointCompoBox;
+        private System.Windows.Forms.CheckBox cityToArea;
     }
 }
 

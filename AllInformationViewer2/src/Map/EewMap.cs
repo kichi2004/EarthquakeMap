@@ -156,31 +156,20 @@ namespace AllInformationViewer2.Map
             var dictionary = new Dictionary<float[], string>();
             switch (InformationsChecker.LatestEew.MaxIntensity.ShortString) {
                 case "1":
-                    dictionary = intList;
-                    break;
                 case "2":
-                    dictionary = intList;
-                    break;
                 case "3":
-                    dictionary = intList;
-                    break;
                 case "4":
                     dictionary = intList;
                     break;
                 case "5-":
-                    dictionary = intList.Where(x => x.Value == "2" || x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "5+":
                     dictionary = intList.Where(x => x.Value == "2" || x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
                     break;
                 case "6-":
-                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "6+":
-                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
-                    break;
                 case "7":
-                    dictionary = intList.Where(x => x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
+                    //dictionary = intList.Where(x => x.Value == "7").ToDictionary(x => x.Key, x => x.Value);
                     break;
             }
             return dictionary;

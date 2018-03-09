@@ -21,3 +21,4 @@ D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\protobuf-ne
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\System.Threading.Tasks.Extensions.dll
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\bin\Debug\kmoni.pdb
 D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.exe.config
+D:\Programs\C#\AllInformationViewer2\AllInformationViewer2\obj\Debug\AllInformationViewer2.csproj.CopyComplete
