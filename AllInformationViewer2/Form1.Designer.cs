@@ -32,8 +32,10 @@
             this.detailTextBox = new System.Windows.Forms.TextBox();
             this.mainPicbox = new System.Windows.Forms.PictureBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.myPointCompoBox = new System.Windows.Forms.ComboBox();
+            this.myPointComboBox = new System.Windows.Forms.ComboBox();
             this.cityToArea = new System.Windows.Forms.CheckBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -87,32 +89,54 @@
             this.label1.TabIndex = 5;
             this.label1.Text = "予測震度表示地点";
             // 
-            // myPointCompoBox
+            // myPointComboBox
             // 
-            this.myPointCompoBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.myPointCompoBox.FormattingEnabled = true;
-            this.myPointCompoBox.Location = new System.Drawing.Point(52, 399);
-            this.myPointCompoBox.Name = "myPointCompoBox";
-            this.myPointCompoBox.Size = new System.Drawing.Size(148, 25);
-            this.myPointCompoBox.TabIndex = 6;
+            this.myPointComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.myPointComboBox.FormattingEnabled = true;
+            this.myPointComboBox.Location = new System.Drawing.Point(52, 399);
+            this.myPointComboBox.Name = "myPointComboBox";
+            this.myPointComboBox.Size = new System.Drawing.Size(148, 25);
+            this.myPointComboBox.TabIndex = 6;
             // 
             // cityToArea
             // 
             this.cityToArea.AutoSize = true;
             this.cityToArea.Location = new System.Drawing.Point(10, 355);
             this.cityToArea.Name = "cityToArea";
-            this.cityToArea.Size = new System.Drawing.Size(107, 21);
+            this.cityToArea.Size = new System.Drawing.Size(128, 21);
             this.cityToArea.TabIndex = 7;
-            this.cityToArea.Text = "地域ごとに描画";
+            this.cityToArea.Text = "地域ごとに描画する";
             this.cityToArea.UseVisualStyleBackColor = true;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(10, 267);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(145, 38);
+            this.checkBox1.TabIndex = 8;
+            this.checkBox1.Text = "地震情報で一定の\r\n震度の範囲で切り取る";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(10, 311);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(152, 38);
+            this.checkBox2.TabIndex = 9;
+            this.checkBox2.Text = "緊急地震速報で一定の\r\n震度の範囲で切り取る";
+            this.checkBox2.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(993, 435);
+            this.Controls.Add(this.checkBox2);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.cityToArea);
-            this.Controls.Add(this.myPointCompoBox);
+            this.Controls.Add(this.myPointComboBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.detailTextBox);
             this.Controls.Add(this.mainPicbox);
@@ -136,8 +160,10 @@
         private System.Windows.Forms.PictureBox mainPicbox;
         private System.Windows.Forms.TextBox detailTextBox;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox myPointCompoBox;
-        private System.Windows.Forms.CheckBox cityToArea;
+        private System.Windows.Forms.ComboBox myPointComboBox;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox checkBox2;
+        internal System.Windows.Forms.CheckBox cityToArea;
     }
 }
 

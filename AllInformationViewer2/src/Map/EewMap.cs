@@ -7,7 +7,7 @@ using static System.Math;
 
 namespace AllInformationViewer2.Map
 {
-    class EewMap
+    static class EewMap
     {
         private const int ImageWidth = 8192;
         private const int ImageHeight = 6805;

@@ -9,7 +9,7 @@ using static System.Math;
 
 namespace AllInformationViewer2.Map
 {
-    class QuakeMap
+    static class QuakeMap
     {
         private const int ImageWidth = 8192;
         private const int ImageHeight = 6805;
@@ -23,7 +23,7 @@ namespace AllInformationViewer2.Map
 
         private static readonly string[] IntList = { "7", "6強", "6弱", "5強", "5弱", "震度５弱以上未入電", "4", "3", "2", "1" };
 
-        public static async Task<Bitmap> Draw(bool filter = true)
+        public static async Task<Bitmap> Draw(bool filter = true, bool cityToArea = false)
         {
             return await Task.Run(() => {
                 var info = InformationsChecker.LatestInformation;
@@ -33,7 +33,7 @@ namespace AllInformationViewer2.Map
                         info.Location.Latitude,
                         info.Location.Longitude
                     });
-                if (!Settings.Default.cityToArea &&
+                if (!cityToArea &&
                 info.InformationType == InformationType.EarthquakeInfo ||
                 info.MaxIntensity == JmaIntensity.Int1 ||
                     info.MaxIntensity == JmaIntensity.Int2) {
@@ -192,6 +192,10 @@ namespace AllInformationViewer2.Map
                     var yMax = filtered.Max(x => x.Key[1]);
                     var centerX = (xMin + xMax) / 2;
                     var centerY = (yMin + yMax) / 2;
+                    //var maxint = info.MaxIntensity.ToLongString().Replace("震度", "");
+                    //var centerX = filtered.Where(x => x.Value == maxint).Select(x => x.Key[0]).Average();
+                    //var centerY = filtered.Where(x => x.Value == maxint).Select(x => x.Key[1]).Average();
+
 
                     // 地図を縮小
                     var areaIntSize = 36f;

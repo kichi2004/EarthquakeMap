@@ -30,7 +30,7 @@ namespace AllInformationViewer2
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0 ? null :
                 await Information.GetNewEarthquakeInformationFromYahooAsync(
-                    //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20101222022000.html"
+                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20150530202422.html"
                 );
             
             //a = false;

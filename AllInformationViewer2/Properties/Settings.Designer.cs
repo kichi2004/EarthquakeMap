@@ -46,5 +46,29 @@ namespace AllInformationViewer2.Properties {
                 this["cityToArea"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool cutOnInfo {
+            get {
+                return ((bool)(this["cutOnInfo"]));
+            }
+            set {
+                this["cutOnInfo"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool cutOnEew {
+            get {
+                return ((bool)(this["cutOnEew"]));
+            }
+            set {
+                this["cutOnEew"] = value;
+            }
+        }
     }
 }

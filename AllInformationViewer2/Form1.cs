@@ -32,6 +32,7 @@ namespace AllInformationViewer2
         private bool _isWarn;
         private DateTime _lastTime;
         private Intensity _lastIntensity;
+        //private bool _cityToAreaFlag;
         private int _myPointIndex;
 
         public Form1()
@@ -49,28 +50,35 @@ namespace AllInformationViewer2
             observationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
-            myPointCompoBox.Items.AddRange(
+            myPointComboBox.SelectedIndexChanged += (s, e) =>
+                _myPointIndex = myPointComboBox.SelectedIndex;
+
+            myPointComboBox.Items.AddRange(
                 observationPoints.Select(x => $"{x.Region} {x.Name}").ToArray());
-            _myPointIndex = myPointCompoBox.SelectedIndex = Settings.Default.myPointIndex;
+            _myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            cityToArea.Checked = Settings.Default.cityToArea;
+            checkBox1.Checked = Settings.Default.cutOnInfo;
+            checkBox2.Checked = Settings.Default.cutOnEew;
+
+            //設定保存
+            this.FormClosing += (s, e) => {
+                Settings.Default.myPointIndex = _myPointIndex;
+                Settings.Default.cityToArea = cityToArea.Checked;
+                Settings.Default.cutOnInfo = checkBox1.Checked;
+                Settings.Default.cutOnEew = checkBox2.Checked;
+                Settings.Default.Save();
+            };
+
 
             var timer = new FixedTimer() {
                 Interval = TimeSpan.FromMilliseconds(100)
             };
             timer.Elapsed += this.TimerElapsed;
-            myPointCompoBox.SelectedIndexChanged += (s, e) =>
-                _myPointIndex = myPointCompoBox.SelectedIndex;
-            cityToArea.Checked = Settings.Default.cityToArea;
 
             _cityToArea = Resources.CityToArea.Replace("\r", "").Split('\n')
                 .Select(x => x.Split(',')).Where(x => x.Length == 2)
                 .ToDictionary(x => x[0], x => x[1]);
-                
-            this.FormClosing += (s, e) => {
-                Settings.Default.myPointIndex = _myPointIndex;
-                Settings.Default.cityToArea = cityToArea.Checked;
-                Settings.Default.Save();
-            };
-            
             //TODO: 例外処理
             try {
                 await SetTime();
@@ -116,7 +124,7 @@ namespace AllInformationViewer2
             (bool eewflag, bool infoflag) = (false, false);
             try {
                 //↓_timeでテスト用
-                //var _time = new DateTime(2018, 1, 5, 11, 3, 0);
+                //var _time = new DateTime(2016, 4, 16, 1, 27, 0);
                 (eewflag, infoflag) = await InformationsChecker.Get(time, _isFirst);
                 _isFirst = false;
             } catch {
@@ -152,7 +160,7 @@ namespace AllInformationViewer2
                             goto last;
                     }
                     //地図描画
-                    using (var bmp = await Task.Run(() => Map.QuakeMap.Draw()))
+                    using (var bmp = await Task.Run(() => Map.QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
                         if (bmp != null) g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                     bool isDetail = info.InformationType != InformationType.SesimicInfo;
                     //文字描画
@@ -212,7 +220,7 @@ namespace AllInformationViewer2
                         eew.OccurrenceTime == _lastTime)
                         goto last;
                     else
-                        using (var bmp = await Map.EewMap.Draw()) {
+                        using (var bmp = await Map.EewMap.Draw(checkBox2.Checked)) {
                             g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                         }
                     _latitude = eew.Coordinate.Latitude;
@@ -262,7 +270,8 @@ namespace AllInformationViewer2
                             detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 10f, FontStyle.Regular);
                         }
                     }
-                    if (detailText != null) detailTextBox.Text = detailText;
+                    if (detailText != null)
+                        detailTextBox.Text = detailText;
                 }));
             } catch {
 
