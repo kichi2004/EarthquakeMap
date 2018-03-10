@@ -113,9 +113,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\area2.csv" />
-    <None Include="Resources\AreaPoint.csv" />
     <None Include="Resources\CityToArea.csv" />
+    <None Include="Resources\AreaPoint.csv" />
     <None Include="Resources\basemap_new_black.png" />
   </ItemGroup>
   <ItemGroup>
