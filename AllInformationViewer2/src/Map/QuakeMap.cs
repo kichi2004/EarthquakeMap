@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿/*
+QuakeMapCS
+Copyright (c) 2018 Oruponu
+Released under the MIT License.
+*/
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,9 +39,9 @@ namespace AllInformationViewer2.Map
                         info.Location.Longitude
                     });
                 if (!cityToArea &&
-                info.InformationType == InformationType.EarthquakeInfo ||
+                (info.InformationType == InformationType.EarthquakeInfo ||
                 info.MaxIntensity == JmaIntensity.Int1 ||
-                    info.MaxIntensity == JmaIntensity.Int2) {
+                    info.MaxIntensity == JmaIntensity.Int2)) {
                     var cityInt = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = z,

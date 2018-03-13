@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿/*
+QuakeMapCS
+Copyright (c) 2018 Oruponu
+Released under the MIT License.
+*/
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;

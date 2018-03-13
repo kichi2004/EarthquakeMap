@@ -34,6 +34,7 @@ namespace AllInformationViewer2
         private Intensity _lastIntensity;
         //private bool _cityToAreaFlag;
         private int _myPointIndex;
+        private bool _forceInfo;
 
         public Form1()
         {
@@ -60,6 +61,8 @@ namespace AllInformationViewer2
             cityToArea.Checked = Settings.Default.cityToArea;
             checkBox1.Checked = Settings.Default.cutOnInfo;
             checkBox2.Checked = Settings.Default.cutOnEew;
+
+            redrawButton.Click += (s, e) => _forceInfo = true;
 
             //設定保存
             this.FormClosing += (s, e) => {
@@ -126,6 +129,11 @@ namespace AllInformationViewer2
                 //↓_timeでテスト用
                 //var _time = new DateTime(2016, 4, 16, 1, 27, 0);
                 (eewflag, infoflag) = await InformationsChecker.Get(time, _isFirst);
+
+                if (_forceInfo) {
+                    infoflag = true;
+                    _forceInfo = false;
+                }
                 _isFirst = false;
             } catch {
                 _isFirst = false;

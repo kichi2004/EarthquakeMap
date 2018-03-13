@@ -36,6 +36,7 @@
             this.cityToArea = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
+            this.redrawButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -83,7 +84,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 379);
+            this.label1.Location = new System.Drawing.Point(7, 378);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(112, 17);
             this.label1.TabIndex = 5;
@@ -93,7 +94,7 @@
             // 
             this.myPointComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.myPointComboBox.FormattingEnabled = true;
-            this.myPointComboBox.Location = new System.Drawing.Point(52, 399);
+            this.myPointComboBox.Location = new System.Drawing.Point(47, 398);
             this.myPointComboBox.Name = "myPointComboBox";
             this.myPointComboBox.Size = new System.Drawing.Size(148, 25);
             this.myPointComboBox.TabIndex = 6;
@@ -101,7 +102,7 @@
             // cityToArea
             // 
             this.cityToArea.AutoSize = true;
-            this.cityToArea.Location = new System.Drawing.Point(10, 355);
+            this.cityToArea.Location = new System.Drawing.Point(5, 324);
             this.cityToArea.Name = "cityToArea";
             this.cityToArea.Size = new System.Drawing.Size(128, 21);
             this.cityToArea.TabIndex = 7;
@@ -111,7 +112,7 @@
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(10, 267);
+            this.checkBox1.Location = new System.Drawing.Point(5, 236);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(145, 38);
             this.checkBox1.TabIndex = 8;
@@ -121,18 +122,28 @@
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(10, 311);
+            this.checkBox2.Location = new System.Drawing.Point(5, 280);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(152, 38);
             this.checkBox2.TabIndex = 9;
             this.checkBox2.Text = "緊急地震速報で一定の\r\n震度の範囲で切り取る";
             this.checkBox2.UseVisualStyleBackColor = true;
             // 
+            // redrawButton
+            // 
+            this.redrawButton.Location = new System.Drawing.Point(5, 350);
+            this.redrawButton.Name = "redrawButton";
+            this.redrawButton.Size = new System.Drawing.Size(190, 25);
+            this.redrawButton.TabIndex = 10;
+            this.redrawButton.Text = "地震情報再取得";
+            this.redrawButton.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(993, 435);
+            this.Controls.Add(this.redrawButton);
             this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.cityToArea);
@@ -164,6 +175,7 @@
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.CheckBox checkBox2;
         internal System.Windows.Forms.CheckBox cityToArea;
+        private System.Windows.Forms.Button redrawButton;
     }
 }
 
