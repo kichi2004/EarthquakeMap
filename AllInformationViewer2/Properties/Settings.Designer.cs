@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AllInformationViewer2.Properties {
+namespace EarthquakeMap.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -68,6 +68,18 @@ namespace AllInformationViewer2.Properties {
             }
             set {
                 this["cutOnEew"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool eewArea {
+            get {
+                return ((bool)(this["eewArea"]));
+            }
+            set {
+                this["eewArea"] = value;
             }
         }
     }

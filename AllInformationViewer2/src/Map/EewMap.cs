@@ -7,10 +7,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
-using AllInformationViewer2.Enums;
+using EarthquakeMap.Enums;
 using static System.Math;
 
-namespace AllInformationViewer2.Map
+namespace EarthquakeMap.Map
 {
     static class EewMap
     {
@@ -30,7 +30,7 @@ namespace AllInformationViewer2.Map
             return await Task.Run(() => {
                 var eew = InformationsChecker.LatestEew;
                 (float lat, float lon) = (0, 0);
-                float[] latlon = ToPixelCoordinate((
+                var latlon = ToPixelCoordinate((
                     eew.Coordinate.Latitude,
                     eew.Coordinate.Longitude
                 ));

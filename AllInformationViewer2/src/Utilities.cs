@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace AllInformationViewer2
+namespace EarthquakeMap
 {
     internal static class Utilities
     {

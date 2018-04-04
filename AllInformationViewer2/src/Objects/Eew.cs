@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using AllInformationViewer2.Enums;
+using EarthquakeMap.Enums;
 using KyoshinMonitorLib;
 
-namespace AllInformationViewer2.Objects
+namespace EarthquakeMap.Objects
 {
     class Eew
     { 

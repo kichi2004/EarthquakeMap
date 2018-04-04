@@ -6,7 +6,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace AllInformationViewer2
+namespace EarthquakeMap
 {
     static class Program
     {

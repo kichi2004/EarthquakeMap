@@ -5,17 +5,20 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Resources;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using AllInformationViewer2.Enums;
-using AllInformationViewer2.Properties;
+using EarthquakeMap.Enums;
+using EarthquakeMap.Properties;
 using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
 using KyoshinMonitorLib;
-using static AllInformationViewer2.Utilities;
+using Microsoft.JScript;
+using static EarthquakeMap.Utilities;
 
-namespace AllInformationViewer2
+namespace EarthquakeMap
 {
     public partial class Form1 : Form
     {
@@ -23,7 +26,7 @@ namespace AllInformationViewer2
         internal static Dictionary<string, string> _cityToArea;
         private DateTime _now;
         private FontFamily _koruriFont;
-        private Bitmap _mainBitmap = null;
+        private Bitmap _mainBitmap;
         private bool _isFirst = true;
         private float _latitude;
         private float _longitude;
@@ -35,6 +38,8 @@ namespace AllInformationViewer2
         //private bool _cityToAreaFlag;
         private int _myPointIndex;
         private bool _forceInfo;
+        private Timer _timer = new Timer {Interval = 5 * 60 * 1000};
+        private Dictionary<string, string> _prefToAreaDictionary;
 
         public Form1()
         {
@@ -61,8 +66,10 @@ namespace AllInformationViewer2
             cityToArea.Checked = Settings.Default.cityToArea;
             checkBox1.Checked = Settings.Default.cutOnInfo;
             checkBox2.Checked = Settings.Default.cutOnEew;
+            this.checkBox3.Checked = Settings.Default.eewArea;
 
-            redrawButton.Click += (s, e) => _forceInfo = true;
+            redrawButton.Click += (s, e) =>
+                _forceInfo = true;
 
             //設定保存
             this.FormClosing += (s, e) => {
@@ -70,9 +77,10 @@ namespace AllInformationViewer2
                 Settings.Default.cityToArea = cityToArea.Checked;
                 Settings.Default.cutOnInfo = checkBox1.Checked;
                 Settings.Default.cutOnEew = checkBox2.Checked;
+                Settings.Default.eewArea = this.checkBox3.Checked;
                 Settings.Default.Save();
             };
-
+            this._timer.Tick += (s, e) => this._forceInfo = true;
 
             var timer = new FixedTimer() {
                 Interval = TimeSpan.FromMilliseconds(100)
@@ -82,12 +90,16 @@ namespace AllInformationViewer2
             _cityToArea = Resources.CityToArea.Replace("\r", "").Split('\n')
                 .Select(x => x.Split(',')).Where(x => x.Length == 2)
                 .ToDictionary(x => x[0], x => x[1]);
-            //TODO: 例外処理
+            this._prefToAreaDictionary =
+                Resources.kyoshin_area.Replace("\r", "").Split('\n')
+                    .Select(x => x.Split(','))
+                    .ToDictionary(x => x[0], x => x[1]);
+            
             try {
                 await SetTime();
                 timer.Start();
             } catch {
-                MessageBox.Show("時刻合わせに失敗しました。");
+                MessageBox.Show(@"時刻合わせに失敗しました。");
                 var timer2 = new System.Timers.Timer(60000);
                 timer2.Elapsed += async (s, e) => {
                     try {
@@ -95,6 +107,7 @@ namespace AllInformationViewer2
                         timer2.Stop();
                         timer.Start();
                     } catch {
+                        //Do nothing
                     }
                 };
             }
@@ -103,7 +116,6 @@ namespace AllInformationViewer2
         //private DateTime _time = new DateTime(2016, 11, 22, 6, 0, 0);
         private async void TimerElapsed()
         {
-            DateTime time;
             if (_now.Minute % 10 == 0 &&
                 _now.Second == 0 && _now.Millisecond <= 100) {
                 await SetTime();
@@ -111,7 +123,7 @@ namespace AllInformationViewer2
                 _now = _now.AddSeconds(0.1);
 
             //時刻補正
-            time = _now;
+            var time = this._now;
             Console.WriteLine(time.ToString("HH:mm:ss.fff"));
             if (time.Millisecond > 100) return;
             //できれば予測震度とか載せたいけどとりあえず放置
@@ -127,15 +139,15 @@ namespace AllInformationViewer2
             (bool eewflag, bool infoflag) = (false, false);
             try {
                 //↓_timeでテスト用
-                //var _time = new DateTime(2016, 4, 16, 1, 27, 0);
-                (eewflag, infoflag) = await InformationsChecker.Get(time, _isFirst);
+                //var _time = new DateTime(2016, 8, 1, 17, 11, 0);
+                (eewflag, infoflag) = await InformationsChecker.Get(time, _forceInfo || _isFirst);
 
                 if (_forceInfo) {
                     infoflag = true;
                     _forceInfo = false;
                 }
                 _isFirst = false;
-            } catch {
+            } catch(Exception ex) {
                 _isFirst = false;
                 goto last;
             }
@@ -152,7 +164,9 @@ namespace AllInformationViewer2
                     Alignment = StringAlignment.Center
                 };
                 var brush = Brushes.White;
+
                 if (infoflag) {
+                    if (_timer.Enabled) this._timer.Stop();
                     var info = InformationsChecker.LatestInformation;
                     switch (info.InformationType) {
                         case InformationType.SesimicInfo:
@@ -170,74 +184,91 @@ namespace AllInformationViewer2
                     //地図描画
                     using (var bmp = await Task.Run(() => Map.QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
                         if (bmp != null) g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
-                    bool isDetail = info.InformationType != InformationType.SesimicInfo;
+                    var isDetail = info.InformationType != InformationType.SesimicInfo;
                     //文字描画
-                    g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10,
-                        isDetail ? 260 : 190, isDetail ? 120 : 40);
-                    g.DrawString($"{info.Origin_time:H時mm分}ごろ", font3, brush, 12, 12);
+                    g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 5,
+                        190, 40);
+                    g.DrawString($"{info.Origin_time:H時mm分}ごろ", font3, brush, 12, 7);
                     if (isDetail) {
-                        g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
-                        g.DrawString(info.Epicenter, font2, brush, new Point(102, 44));
-                        g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
-                        g.DrawString(info.Depth != 0 ? $"{info.Depth}km" : "ごく浅い", font2, brush, new Point(102, 64));
-                        g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
-                        g.DrawString($"M{info.Magnitude:0.0}", font2, brush, new Point(102, 84));
-                        g.DrawString($"最大震度", font2, brush, new Point(25, 104));
-                        g.DrawString(info.MaxIntensity.ToLongString().Replace("震度", ""), font2, brush, new Point(102, 104));
-                    } 
+                        g.DrawImage(Image.FromFile(@"Images\Jishin\summary.png"), new Point(495, 5));
+                        g.DrawString(info.Epicenter, font2, brush, new Point(590, 27));
+                        g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush, new Point(590, 61));
+                        g.DrawString($"M{info.Magnitude:0.0}", font1, brush, new Point(590, 102));
+                        //g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
+                        //g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
+                        //g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
+                        //g.DrawString($"最大震度", font2, brush, new Point(25, 104));
+                        //g.DrawString(info.MaxIntensity.ToLongString().Replace("震度", ""), font2, brush, new Point(102, 104));
+                    }
                     var sindDetail = new StringBuilder();
                     foreach (var sind1 in info.Shindo) {
                         sindDetail.Append($"［{sind1.Intensity.ToLongString()}］");
                         var places = sind1.Place.SelectMany(x => x.Place);
                         sindDetail.AppendLine(string.Join(" ", places));
                     }
-                    detailText = sindDetail.ToString();
-                } else if (eewflag) {
+                    detailText = sindDetail.ToString().TrimEnd();
+                } else {
+                    if (_timer.Enabled) _timer.Stop();
+                    _timer.Stop();
                     var eew = InformationsChecker.LatestEew;
 
                     infotype = eew.IsWarn ? "警報" : "予報";
-                    Console.WriteLine($"緊急地震速報(第{eew.Number}報) {eew.Epicenter} " +
-                        $"{eew.Depth}km M{eew.Magnitude} {eew.MaxIntensity.LongString}");
-                    string max = eew.MaxIntensity.LongString.Replace("震度", "").Replace("1", "１").Replace("2", "２")
+                    Console.WriteLine($@"緊急地震速報(第{eew.Number}報) {eew.Epicenter} " +
+                                      $@"{eew.Depth}km M{eew.Magnitude} {eew.MaxIntensity.LongString}");
+                    var max = eew.MaxIntensity.LongString.Replace("震度", "").Replace("1", "１").Replace("2", "２")
                         .Replace("3", "３").Replace("4", "４").Replace("5", "５").Replace("6", "６").Replace("7", "７");
                     //EEW予測震度画像を取得・解析
-                    var estShindo = eew.EstShindo;
-                    string mypResult = "";
-                    var myPoint = estShindo.ElementAt(_myPointIndex);
+                    var estShindo = eew.EstShindo.ToArray();
+                    var mypResult = "";
+                    var myPoint = estShindo[this._myPointIndex];
                     if (myPoint != null) {
                         var val = myPoint.AnalysisResult;
-                        mypResult = $"{myPoint.Region} {myPoint.Name}\r\n" +
-                            $"推定震度: {Intensity.FromValue(val ?? 0).LongString.Replace("震度", "")} " +
-                            $"({val ?? 0:0.0})";
+                        mypResult = "予測震度: " + 
+                                    Intensity.FromValue(val ?? 0).
+                                        LongString.Replace("震度", "") + 
+                                    $" ({val ?? 0:0.0})";
                     }
 
-                    estShindo = estShindo.Where(x => x.AnalysisResult > 0.4);
-                    var maxint = estShindo.Max(y => y.AnalysisResult) ?? 0;
-                    var max_points = estShindo.Where(x => x.AnalysisResult == maxint);
-                    var maxpt_str = string.Join(
-                        ", ", max_points.Select(x => $"{x.Region} {x.Name}").Distinct().ToArray());
-                    var detail = $"{(eew.IsLast ? "最終" : "")}第{eew.Number}報\r\n\r\n{mypResult}";
-                    detailText = detail;
+                    var res = estShindo.Where(x => x.AnalysisResult >= 0.5);
+                    var res2 = this.checkBox3.Checked
+                        ? res
+                            .Select(x =>(
+                                    Region: this._prefToAreaDictionary[x.Region],
+                                    Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f)
+                                ))
+                            .Where(x => x.Region != "null")
+                        : res
+                            .Select(x => (
+                                Region: x.Region,
+                                Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f)
+                            ));
+                    detailText =
+                        $"第{eew.Number}報{(eew.IsLast ? "(最終)" : "")} {eew.AnnouncedTime:HH:mm:ss}発報\r\n{mypResult}\r\n\r\n" +
+                        string.Join("\r\n",
+                            res2
+                                .OrderByDescending(x => x.Intensity.EnumOrder)
+                                .Distinct(new IntensityEqualComparer()).GroupBy(x => x.Item2)
+                                .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"));
                     //地図描画
-                    if (eew.Coordinate.Latitude == _latitude &&
-                        eew.Coordinate.Longitude == _longitude &&
-                        eew.Depth == _depth &&
-                        eew.Magnitude == _magnitude &&
-                        eew.MaxIntensity == _lastIntensity &&
-                        eew.IsWarn == _isWarn &&
-                        eew.OccurrenceTime == _lastTime)
+                    if (eew.Coordinate.Latitude == this._latitude &&
+                        eew.Coordinate.Longitude == this._longitude &&
+                        eew.Depth == this._depth &&
+                        eew.Magnitude == this._magnitude &&
+                        eew.MaxIntensity == this._lastIntensity &&
+                        eew.IsWarn == this._isWarn &&
+                        eew.OccurrenceTime == this._lastTime)
                         goto last;
-                    else
-                        using (var bmp = await Map.EewMap.Draw(checkBox2.Checked)) {
-                            g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
-                        }
-                    _latitude = eew.Coordinate.Latitude;
-                    _longitude = eew.Coordinate.Longitude;
-                    _depth = eew.Depth;
-                    _magnitude = eew.Magnitude;
-                    _isWarn = eew.IsWarn;
-                    _lastIntensity = eew.MaxIntensity;
-                    _lastTime = eew.OccurrenceTime;
+                    using (var bmp = await Map.EewMap.Draw(this.checkBox2.Checked)) {
+                        g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                    }
+
+                    this._latitude = eew.Coordinate.Latitude;
+                    this._longitude = eew.Coordinate.Longitude;
+                    this._depth = eew.Depth;
+                    this._magnitude = eew.Magnitude;
+                    this._isWarn = eew.IsWarn;
+                    this._lastIntensity = eew.MaxIntensity;
+                    this._lastTime = eew.OccurrenceTime;
                     //文字描画
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 260, 120);
                     g.DrawString($"最大震度 {max}", font1, brush, new Rectangle(10, 12, 230, 39), format);
@@ -250,13 +281,14 @@ namespace AllInformationViewer2
                     g.DrawString($"発生時刻", font2, brush, new Point(25, 104));
                     g.DrawString($"{eew.OccurrenceTime:HH:mm:ss}", font2, brush, new Point(102, 104));
                 }
+
                 font1.Dispose();
                 font2.Dispose();
             } catch (Exception e) {
                 MessageBox.Show("地図描画に失敗しました。", "失敗", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Console.WriteLine(e);
             }
-            goto last;
+
             last:
             //フォーム関連は最後にまとめて
             try {
@@ -267,15 +299,12 @@ namespace AllInformationViewer2
                         if (infotype == "警報") {
                             infoType.ForeColor = Color.Red;
                             infoType.Text = "緊急地震速報";
-                            detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 12f, FontStyle.Regular);
                         } else if (infotype == "予報") {
                             infoType.ForeColor = Color.Black;
                             infoType.Text = "緊急地震速報";
-                            detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 12f, FontStyle.Regular);
                         } else {
                             infoType.ForeColor = Color.Black;
                             infoType.Text = infotype;
-                            detailTextBox.Font = new Font(detailTextBox.Font.FontFamily, 10f, FontStyle.Regular);
                         }
                     }
                     if (detailText != null)
@@ -294,26 +323,26 @@ namespace AllInformationViewer2
             old = null;
         }
 
-        /// <summary>
-        /// 強震モニタの画像を取得します。
-        /// </summary>
-        /// <param name="time">取得する時刻</param>
-        /// <returns></returns>
-        private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
-        {
-            time = time.AddSeconds(-1);
-            //強震モニタ画像取得
-            string kmoniUrl =
-                $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
-                $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
-            Bitmap res = null;
-            try {
-                res = await DownloadImageAsync(kmoniUrl);
-            } catch {
-                res = null;
-            }
-            return res;
-        }
+        ///// <summary>
+        ///// 強震モニタの画像を取得します。
+        ///// </summary>
+        ///// <param name="time">取得する時刻</param>
+        ///// <returns></returns>
+        //private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
+        //{
+        //    time = time.AddSeconds(-1);
+        //    //強震モニタ画像取得
+        //    string kmoniUrl =
+        //        $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
+        //        $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
+        //    Bitmap res = null;
+        //    try {
+        //        res = await DownloadImageAsync(kmoniUrl);
+        //    } catch {
+        //        res = null;
+        //    }
+        //    return res;
+        //}
 
         /// <summary>
         /// 時刻を合わせます。

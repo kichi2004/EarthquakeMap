@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace AllInformationViewer2.Enums
+namespace EarthquakeMap.Enums
 {
-    class Intensity
+    class Intensity : IEquatable<Intensity>
     {
         /// <summary>
         /// 震度不明
@@ -221,10 +221,24 @@ namespace AllInformationViewer2.Enums
             }
         }
 
-        public static explicit operator Int32(Intensity intensity)
+        public static explicit operator int(Intensity intensity)
         {
-            if (intensity == null) throw new ArgumentNullException("intensity");
+            if (intensity == null) throw new ArgumentNullException(nameof(intensity));
             return intensity.EnumOrder;
+        }
+
+        public bool Equals(Intensity other) {
+            return this.EnumOrder == other.EnumOrder;
+        }
+
+        public override bool Equals(object obj) {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == this.GetType() && this.Equals((Intensity) obj);
+        }
+
+        public override int GetHashCode() {
+            return this.EnumOrder;
         }
     }
 }

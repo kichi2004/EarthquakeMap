@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2024
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllInformationViewer2", "AllInformationViewer2\AllInformationViewer2.csproj", "{46BF191A-7C19-414C-B35E-93C9AECBF7D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EarthquakeMap", "AllInformationViewer2\EarthquakeMap.csproj", "{46BF191A-7C19-414C-B35E-93C9AECBF7D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForRelease", "ForRelease\ForRelease.csproj", "{750D38EA-FAE1-4A4A-A9BC-0A1D47F8A091}"
 EndProject

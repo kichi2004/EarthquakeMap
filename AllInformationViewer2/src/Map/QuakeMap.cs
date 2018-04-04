@@ -7,12 +7,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
-using AllInformationViewer2.Properties;
+using EarthquakeMap.Properties;
 using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
 using static System.Math;
 
-namespace AllInformationViewer2.Map
+namespace EarthquakeMap.Map
 {
     static class QuakeMap
     {

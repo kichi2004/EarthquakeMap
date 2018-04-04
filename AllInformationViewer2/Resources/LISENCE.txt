@@ -1,0 +1,3 @@
+AreaPoint.csv, CityPoint.csv
+Copyright (c) 2015 Kei Yoshimura
+Released under the MIT License.
