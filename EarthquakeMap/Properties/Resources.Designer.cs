@@ -152,7 +152,6 @@ namespace EarthquakeMap.Properties {
         
         /// <summary>
         ///   網走地方,北海道
-        ///網走地方,北海道
         ///日高地方,北海道
         ///桧山地方,北海道
         ///胆振地方,北海道
@@ -209,11 +208,22 @@ namespace EarthquakeMap.Properties {
         ///香川県,四国
         ///愛媛県,四国
         ///高知県,四国
-        ///福岡県 [残りの文字列は切り詰められました]&quot;; に類似しているローカライズされた文字列を検索します。
+        ///福岡県,九州
+        ///佐賀県,九 [残りの文字列は切り詰められました]&quot;; に類似しているローカライズされた文字列を検索します。
         /// </summary>
         internal static string kyoshin_area {
             get {
                 return ResourceManager.GetString("kyoshin_area", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   型 System.Drawing.Bitmap のローカライズされたリソースを検索します。
+        /// </summary>
+        internal static System.Drawing.Bitmap loading {
+            get {
+                object obj = ResourceManager.GetObject("loading", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

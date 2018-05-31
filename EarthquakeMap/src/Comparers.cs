@@ -13,13 +13,13 @@ namespace EarthquakeMap
         public int Compare(string x, string y) => Array.IndexOf(IntList, x) - Array.IndexOf(IntList, y);
     }
 
-    class IntensityEqualComparer : IEqualityComparer<(string, Intensity)>
+    class IntensityEqualComparer : IEqualityComparer<(string, Intensity, float)>
     {
-        public bool Equals((string, Intensity) x, (string, Intensity) y) {
+        public bool Equals((string, Intensity, float) x, (string, Intensity, float) y) {
             return x.Item1.Equals(y.Item1);
         }
 
-        public int GetHashCode((string, Intensity) obj) {
+        public int GetHashCode((string, Intensity, float) obj) {
             return obj.Item1.GetHashCode();
         }
     }

@@ -98,10 +98,7 @@ namespace EarthquakeMap.Map
                     cityIntSize = (int)Ceiling(cityIntSize * zoomRate);
 
                     // 画像読み込み
-                    var imageCityList = new Dictionary<string, Bitmap>();
-                    foreach (var intensity in IntList.Reverse()) {
-                        imageCityList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
-                    }
+                    var imageCityList = IntList.Reverse().ToDictionary(intensity => intensity, intensity => new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
 
                     // 地図の範囲外であった場合、拡張する
                     var orgX = (int)Ceiling(centerX) - cutWidth / 2;
@@ -203,7 +200,7 @@ namespace EarthquakeMap.Map
 
 
                     // 地図を縮小
-                    var areaIntSize = 36f;
+                    var areaIntSize = 48f;
                     //var cityIntSize = 24f;
                     var zoomRate = 1f;
                     var diffWidth = filtered.Max(x => x.Key[0]) - filtered.Min(x => x.Key[0]);
@@ -223,10 +220,7 @@ namespace EarthquakeMap.Map
                     areaIntSize = (int)Ceiling(areaIntSize * zoomRate);
 
                     // 画像読み込み
-                    var imageAreaList = new Dictionary<string, Bitmap>();
-                    foreach (var intensity in IntList.Reverse()) {
-                        imageAreaList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
-                    }
+                    var imageAreaList = IntList.Reverse().ToDictionary(intensity => intensity, intensity => new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
 
                     // 地図の範囲外であった場合、拡張する
                     var orgX = (int)Ceiling(centerX) - cutWidth / 2;

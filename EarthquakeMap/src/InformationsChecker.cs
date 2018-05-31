@@ -30,7 +30,7 @@ namespace EarthquakeMap
             var info = !forceInfo && time.Second % 20 != 0
                 ? null
                 : await Information.GetNewEarthquakeInformationFromYahooAsync(
-                    //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20110311144600.html"
+                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20110311144600.html"
                 );
 
             //a = false;
@@ -53,7 +53,7 @@ namespace EarthquakeMap
             }
 
             if (infoflag) return (false, true);
-            int num = 0;
+            var num = 0;
             string id = null;
             if (eewobj.result.message == "データがありません" ||
                 (num = int.Parse(eewobj.report_num)) == _lastnum && (id = eewobj.report_id) == _lastId) {
@@ -66,7 +66,7 @@ namespace EarthquakeMap
 
             var task = DownloadImageAsync($"http://www.kmoni.bosai.go.jp/new/data/" +
                                           $"map_img/EstShindoImg/eew/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.eew.gif");
-            var eew = new Eew() {
+            var eew = new Eew {
                 IsWarn = eewobj.alertflg == "警報",
                 MaxIntensity = Intensity.Parse(eewobj.calcintensity),
                 Depth = int.Parse(eewobj.depth.Replace("km", "")),

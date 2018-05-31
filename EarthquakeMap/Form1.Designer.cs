@@ -76,7 +76,8 @@
             // 
             // mainPicbox
             // 
-            this.mainPicbox.BackColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.mainPicbox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.mainPicbox.BackgroundImage = global::EarthquakeMap.Properties.Resources.loading;
             this.mainPicbox.Location = new System.Drawing.Point(220, 0);
             this.mainPicbox.Name = "mainPicbox";
             this.mainPicbox.Size = new System.Drawing.Size(773, 435);
@@ -179,6 +180,7 @@
             this.Font = new System.Drawing.Font("Yu Gothic UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.MinimizeBox = false;
             this.Name = "Form1";
             this.Text = "EarthquakeMap";
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).EndInit();

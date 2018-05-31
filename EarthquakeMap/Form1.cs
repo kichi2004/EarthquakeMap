@@ -16,6 +16,8 @@ using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
 using KyoshinMonitorLib;
 using Microsoft.JScript;
+using Microsoft.VisualBasic;
+using Strings = Microsoft.VisualBasic.Strings;
 using static EarthquakeMap.Utilities;
 
 namespace EarthquakeMap
@@ -24,7 +26,7 @@ namespace EarthquakeMap
     {
         internal static ObservationPoint[] observationPoints;
         internal static Dictionary<string, string> _cityToArea;
-        private DateTime _now;
+        private DateTime _now, _time;
         private FontFamily _koruriFont;
         private Bitmap _mainBitmap;
         private bool _isFirst = true;
@@ -111,6 +113,7 @@ namespace EarthquakeMap
                     }
                 };
             }
+            _time = new DateTime(2018, 5, 24, 1, 25, 50);
         }
 
         //private DateTime _time = new DateTime(2016, 11, 22, 6, 0, 0);
@@ -136,22 +139,23 @@ namespace EarthquakeMap
 
             //EEW・地震情報取得
             string infotype = null, detailText = null;
-            (bool eewflag, bool infoflag) = (false, false);
+            bool eewflag, infoflag;
             try {
                 //↓_timeでテスト用
-                //var _time = new DateTime(2016, 8, 1, 17, 11, 0);
-                (eewflag, infoflag) = await InformationsChecker.Get(time, _forceInfo || _isFirst);
+                (eewflag, infoflag) = await InformationsChecker.Get(_time, _forceInfo || _isFirst);
+                _time = _time.AddSeconds(1);
 
                 if (_forceInfo) {
                     infoflag = true;
                     _forceInfo = false;
                 }
                 _isFirst = false;
-            } catch(Exception ex) {
+            } catch(Exception) {
                 _isFirst = false;
                 goto last;
             }
             if (!infoflag && !eewflag) goto last;
+            if (_timer.Enabled) _timer.Stop();
             try {
                 var font1 = new Font(_koruriFont, 20f, FontStyle.Bold);
                 var font2 = new Font(_koruriFont, 12f);
@@ -166,7 +170,6 @@ namespace EarthquakeMap
                 var brush = Brushes.White;
 
                 if (infoflag) {
-                    if (_timer.Enabled) this._timer.Stop();
                     var info = InformationsChecker.LatestInformation;
                     switch (info.InformationType) {
                         case InformationType.SesimicInfo:
@@ -189,16 +192,107 @@ namespace EarthquakeMap
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 5,
                         190, 40);
                     g.DrawString($"{info.Origin_time:H時mm分}ごろ", font3, brush, 12, 7);
+
                     if (isDetail) {
-                        g.DrawImage(Image.FromFile(@"Images\Jishin\summary.png"), new Point(495, 5));
-                        g.DrawString(info.Epicenter, font2, brush, new Point(590, 27));
-                        g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush, new Point(590, 61));
-                        g.DrawString($"M{info.Magnitude:0.0}", font1, brush, new Point(590, 102));
-                        //g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
-                        //g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
-                        //g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
-                        //g.DrawString($"最大震度", font2, brush, new Point(25, 104));
-                        //g.DrawString(info.MaxIntensity.ToLongString().Replace("震度", ""), font2, brush, new Point(102, 104));
+                        var dictepi = new Dictionary<string, string> {
+                                {"留萌地方中北部", "留萌地方\r\n中北部"},
+                                {"胆振地方中東部", "胆振地方\r\n中東部"},
+                                {"釧路地方中南部", "釧路地方\r\n中南部"},
+                                {"根室半島南東沖", "根室半島\r\n南東沖"},
+                                {"青森県津軽北部", "青森県\r\n津軽北部"},
+                                {"青森県津軽南部", "青森県\r\n津軽南部"},
+                                {"青森県三八上北地方", "青森県\r\n三八上北地方"},
+                                {"青森県下北地方", "青森県\r\n下北地方"},
+                                {"岩手県沿岸北部", "岩手県\r\n沿岸北部"},
+                                {"岩手県沿岸南部", "岩手県\r\n沿岸南部"},
+                                {"岩手県内陸北部", "岩手県\r\n内陸北部"},
+                                {"岩手県内陸南部", "岩手県\r\n内陸南部"},
+                                {"秋田県沿岸北部", "秋田県\r\n沿岸北部"},
+                                {"秋田県沿岸南部", "秋田県\r\n沿岸南部"},
+                                {"秋田県内陸北部", "秋田県\r\n内陸北部"},
+                                {"秋田県内陸南部", "秋田県\r\n内陸南部"},
+                                {"山形県庄内地方", "山形県\r\n庄内地方"},
+                                {"山形県最上地方", "山形県\r\n最上地方"},
+                                {"山形県村山地方", "山形県\r\n村山地方"},
+                                {"山形県置賜地方", "山形県\r\n置賜地方"},
+                                {"埼玉県秩父地方", "埼玉県\r\n秩父地方"},
+                                {"房総半島南方沖", "房総半島\r\n南方沖"},
+                                {"東京都多摩東部", "東京都\r\n多摩東部"},
+                                {"東京都多摩西部", "東京都\r\n多摩西部"},
+                                {"新潟県上越地方", "新潟県\r\n上越地方"},
+                                {"新潟県中越地方", "新潟県\r\n中越地方"},
+                                {"新潟県下越地方", "新潟県\r\n下越地方"},
+                                {"新潟県上中越沖", "新潟県\r\n上中越沖"},
+                                {"石川県能登地方", "石川県\r\n能登地方"},
+                                {"石川県加賀地方", "石川県\r\n加賀地方"},
+                                {"山梨県中・西部", "山梨県\r\n中・西部"},
+                                {"山梨県東部・富士五湖", "山梨県東部・\r\n富士五湖"},
+                                {"岐阜県飛騨地方", "岐阜県\r\n飛騨地方"},
+                                {"岐阜県美濃東部", "岐阜県\r\n美濃東部"},
+                                {"岐阜県美濃中西部", "岐阜県\r\n美濃中西部"},
+                                {"静岡県伊豆地方", "静岡県\r\n伊豆地方"},
+                                {"伊豆半島東方沖", "伊豆半島\r\n東方沖"},
+                                {"新島・神津島近海", "新島・神津島\r\n近海"},
+                                {"和歌山県南方沖", "和歌山県\r\n南方沖"},
+                                {"福岡県福岡地方", "福岡県\r\n福岡地方"},
+                                {"福岡県北九州地方", "福岡県\r\n北九州地方"},
+                                {"福岡県筑豊地方", "福岡県\r\n筑豊地方"},
+                                {"福岡県筑後地方", "福岡県\r\n筑後地方"},
+                                {"長崎県島原半島", "長崎県\r\n島原半島"},
+                                {"熊本県阿蘇地方", "熊本県\r\n阿蘇地方"},
+                                {"熊本県熊本地方", "熊本県\r\n熊本地方"},
+                                {"熊本県球磨地方", "熊本県\r\n球磨地方"},
+                                {"熊本県天草・芦北地方", "熊本県天草・\r\n芦北地方"},
+                                {"宮崎県北部平野部", "宮崎県\r\n北部平野部"},
+                                {"宮崎県北部山沿い", "宮崎県\r\n北部山沿い"},
+                                {"宮崎県南部平野部", "宮崎県\r\n南部平野部"},
+                                {"宮崎県南部山沿い", "宮崎県\r\n南部山沿い"},
+                                {"鹿児島県薩摩地方", "鹿児島県\r\n薩摩地方"},
+                                {"鹿児島県大隅地方", "鹿児島県\r\n大隅地方"},
+                                {"壱岐・対馬近海", "壱岐・対馬\r\n近海"},
+                                {"薩摩半島西方沖", "薩摩半島\r\n西方沖"},
+                                {"トカラ列島近海", "トカラ列島\r\n近海"},
+                                {"奄美大島北西沖", "奄美大島\r\n北西沖"},
+                                {"大隅半島東方沖", "大隅半島\r\n東方沖"},
+                                {"九州地方南東沖", "九州地方\r\n南東沖"},
+                                {"奄美大島北東沖", "奄美大島\r\n北東沖"},
+                                {"沖縄本島南方沖", "沖縄本島\r\n南方沖"},
+                                {"沖縄本島北西沖", "沖縄本島\r\n北西沖"},
+                                {"オホーツク海南部", "オホーツク海\r\n南部"},
+                                {"サハリン西方沖", "サハリン\r\n西方沖"},
+                                {"千島列島南東沖", "千島列島\r\n南東沖"},
+                                {"東北地方東方沖", "東北地方\r\n東方沖"},
+                                {"小笠原諸島西方沖", "小笠原諸島\r\n西方沖"},
+                                {"小笠原諸島東方沖", "小笠原諸島\r\n東方沖"},
+                                {"薩南諸島東方沖", "薩南諸島\r\n東方沖"},
+                                {"サハリン南部付近", "サハリン南部\r\n付近"}
+                            };
+                        string epi = null;
+                        if (info.Epicenter.Length <= 6 || dictepi.TryGetValue(info.Epicenter, out epi)) {
+                            var b = epi == null;
+                            if (b) epi = info.Epicenter;
+                            g.DrawImage(Image.FromFile(@"Images\Jishin\" + (b ? "Summary1.png" : "Summary2.png")), new Point(495, 5));
+                            g.DrawString(epi, new Font(_koruriFont, 20f), brush, new Point(587, 12));
+                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
+                                b ? new Point(587, 52) : new Point(587, 85));
+                            g.DrawString($"M{info.Magnitude:0.0}", font1, brush,
+                                b ? new Point(587, 94) : new Point(587, 126));
+                        } else {
+                            Point epicenterPoint;
+                            Font epicenterFont;
+                            if (info.Epicenter.Length == 10) {
+                                epicenterFont = new Font(this._koruriFont, 18f);
+                                epicenterPoint = new Point(506, 49);
+                            } else {
+                                epicenterFont = new Font(this._koruriFont, 20f);
+                                epicenterPoint = new Point(506, 47);
+                            }
+
+                            g.DrawImage(Image.FromFile(@"Images\Jishin\Summary2.png"), new Point(495, 5));
+                            g.DrawString(info.Epicenter, epicenterFont, brush, epicenterPoint);
+                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush, new Point(587, 85));
+                            g.DrawString($"M{info.Magnitude:0.0}", font1, brush, new Point(587, 126));
+                        }
                     }
                     var sindDetail = new StringBuilder();
                     foreach (var sind1 in info.Shindo) {
@@ -208,8 +302,7 @@ namespace EarthquakeMap
                     }
                     detailText = sindDetail.ToString().TrimEnd();
                 } else {
-                    if (_timer.Enabled) _timer.Stop();
-                    _timer.Stop();
+                    _timer.Start();
                     var eew = InformationsChecker.LatestEew;
 
                     infotype = eew.IsWarn ? "警報" : "予報";
@@ -223,7 +316,7 @@ namespace EarthquakeMap
                     var myPoint = estShindo[this._myPointIndex];
                     if (myPoint != null) {
                         var val = myPoint.AnalysisResult;
-                        mypResult = "予測震度: " + 
+                        mypResult = "地点予測震度: " + 
                                     Intensity.FromValue(val ?? 0).
                                         LongString.Replace("震度", "") + 
                                     $" ({val ?? 0:0.0})";
@@ -232,21 +325,22 @@ namespace EarthquakeMap
                     var res = estShindo.Where(x => x.AnalysisResult >= 0.5);
                     var res2 = this.checkBox3.Checked
                         ? res
-                            .Select(x =>(
-                                    Region: this._prefToAreaDictionary[x.Region],
-                                    Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f)
-                                ))
+                            .Select(x => (
+                                Region: this._prefToAreaDictionary[x.Region],
+                                Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f),
+                                Value: x.AnalysisResult ?? 0.0f
+                            ))
                             .Where(x => x.Region != "null")
                         : res
-                            .Select(x => (
-                                Region: x.Region,
-                                Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f)
-                            ));
+                            .Select(x => (x.Region,
+                                    Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f),
+                                    Value: x.AnalysisResult ?? 0.0f
+                                ));
                     detailText =
                         $"第{eew.Number}報{(eew.IsLast ? "(最終)" : "")} {eew.AnnouncedTime:HH:mm:ss}発報\r\n{mypResult}\r\n\r\n" +
                         string.Join("\r\n",
                             res2
-                                .OrderByDescending(x => x.Intensity.EnumOrder)
+                                .OrderByDescending(x => x.Value)
                                 .Distinct(new IntensityEqualComparer()).GroupBy(x => x.Item2)
                                 .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"));
                     //地図描画
@@ -272,20 +366,20 @@ namespace EarthquakeMap
                     //文字描画
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 260, 120);
                     g.DrawString($"最大震度 {max}", font1, brush, new Rectangle(10, 12, 230, 39), format);
-                    g.DrawString($"　震源地　", font2, brush, new Point(15, 44));
+                    g.DrawString( "　震源地　", font2, brush, new Point(15, 44));
                     g.DrawString(eew.Epicenter, font2, brush, new Point(102, 44));
-                    g.DrawString($"震源の深さ", font2, brush, new Point(15, 64));
+                    g.DrawString( "震源の深さ", font2, brush, new Point(15, 64));
                     g.DrawString($"{eew.Depth}km", font2, brush, new Point(102, 64));
-                    g.DrawString($"地震の規模", font2, brush, new Point(15, 84));
+                    g.DrawString( "地震の規模", font2, brush, new Point(15, 84));
                     g.DrawString($"M{eew.Magnitude:0.0}", font2, brush, new Point(102, 84));
-                    g.DrawString($"発生時刻", font2, brush, new Point(25, 104));
+                    g.DrawString( "発生時刻", font2, brush, new Point(25, 104));
                     g.DrawString($"{eew.OccurrenceTime:HH:mm:ss}", font2, brush, new Point(102, 104));
                 }
 
                 font1.Dispose();
                 font2.Dispose();
             } catch (Exception e) {
-                MessageBox.Show("地図描画に失敗しました。", "失敗", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //MessageBox.Show("地図描画に失敗しました。", "失敗", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Console.WriteLine(e);
             }
 
@@ -315,12 +409,9 @@ namespace EarthquakeMap
             }
         }
 
-        private void SwapImage(Bitmap image)
+        private void SwapImage(Image image)
         {
-            var old = mainPicbox.Image;
             mainPicbox.Image = image;
-            //old?.Dispose();
-            old = null;
         }
 
         ///// <summary>
