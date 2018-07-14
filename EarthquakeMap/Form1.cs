@@ -113,7 +113,7 @@ namespace EarthquakeMap
                     }
                 };
             }
-            _time = new DateTime(2018, 5, 24, 1, 25, 50);
+            //_time = new DateTime(2018, 5, 24, 1, 25, 50);
         }
 
         //private DateTime _time = new DateTime(2016, 11, 22, 6, 0, 0);
@@ -142,7 +142,7 @@ namespace EarthquakeMap
             bool eewflag, infoflag;
             try {
                 //↓_timeでテスト用
-                (eewflag, infoflag) = await InformationsChecker.Get(_time, _forceInfo || _isFirst);
+                (eewflag, infoflag) = await InformationsChecker.Get(time, _forceInfo || _isFirst);
                 _time = _time.AddSeconds(1);
 
                 if (_forceInfo) {

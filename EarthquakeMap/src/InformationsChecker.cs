@@ -30,7 +30,7 @@ namespace EarthquakeMap
             var info = !forceInfo && time.Second % 20 != 0
                 ? null
                 : await Information.GetNewEarthquakeInformationFromYahooAsync(
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20110311144600.html"
+                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20160416012510.html?t=1"
                 );
 
             //a = false;
@@ -40,7 +40,7 @@ namespace EarthquakeMap
                     info.InformationType != InformationType.UnknownSesimic &&
                     LatestInformation == null ||
                     info.Origin_time != LatestInformation.Origin_time ||
-                    info.Announced_time != LatestInformation.Announced_time ||
+                    //info.Announced_time != LatestInformation.Announced_time ||
                     info.Epicenter != LatestInformation.Epicenter ||
                     info.Magnitude != LatestInformation.Magnitude ||
                     info.Depth != LatestInformation.Depth ||
