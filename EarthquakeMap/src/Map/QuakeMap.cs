@@ -158,7 +158,7 @@ namespace EarthquakeMap.Map
                 } else {
                     var areaInt_ = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
-                            Place = info.InformationType == InformationType.EarthquakeInfo ? Form1._cityToArea[z] : z,
+                            Place = info.InformationType == InformationType.EarthquakeInfo ? Form1.CityToArea[z] : z,
                             Intensity = x.Intensity.ToLongString().Replace("震度", "")
                         })));
                     var areaInt = new Dictionary<string, string>();

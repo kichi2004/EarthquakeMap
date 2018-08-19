@@ -2,18 +2,21 @@
 using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using EarthquakeMap.Enums;
 using EarthquakeMap.Objects;
 using Codeplex.Data;
 using EarthquakeLibrary.Information;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
+using JmaIntensity = EarthquakeLibrary.Core.JmaIntensity;
 
 namespace EarthquakeMap
 {
     internal static class InformationsChecker
     {
         internal static NewEarthquakeInformation LatestInformation { get; private set; }
+        private static bool _isLastUnknown;
         internal static Eew LatestEew { get; private set; }
 
         private static int _lastnum;
@@ -29,18 +32,44 @@ namespace EarthquakeMap
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0
                 ? null
-                : await Information.GetNewEarthquakeInformationFromYahooAsync(
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20160416012510.html?t=1"
-                );
+                : await Information.GetNewEarthquakeInformationFromYahooAsync(Form1.Url);
 
             //a = false;
             //変化あるか確認
             if (info != null) {
-                if (info.InformationType != InformationType.Other &&
-                    info.InformationType != InformationType.UnknownSesimic &&
+                if (info.InformationType == InformationType.Other ||
+                    info.InformationType == InformationType.UnknownSesimic)
+                {
+                    if (!_isLastUnknown && LatestInformation == null)
+                    {
+                        var flag = info.Oldinfo?.Any() != true;
+                        if (flag)
+                        {
+                            info = await Information.GetNewEarthquakeInformationFromYahooAsync();
+                        }
+
+                        MessageBox.Show(flag
+                                ? @"指定された地震情報URLは震度不明地震（海外地震等）のため、最新の地震情報を表示します。"
+                                : @"最新の地震情報が震度不明地震（海外地震等）のため、1つ前の地震情報を表示します。",
+                            @"EqMap", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+
+                        if (!flag ||
+                            info.InformationType == InformationType.Other ||
+                            info.InformationType == InformationType.UnknownSesimic)
+                        {
+                            info = await Information.GetNewEarthquakeInformationFromYahooAsync(
+                                info.Oldinfo.Skip(1).First(x => x.MaxIntensity != JmaIntensity.Unknown)
+                                    .Info_url);
+                        }
+                        infoflag = true;
+                        LatestInformation = info;
+                        _isLastUnknown = true;
+                    }
+                }
+
+                else if (
                     LatestInformation == null ||
                     info.Origin_time != LatestInformation.Origin_time ||
-                    //info.Announced_time != LatestInformation.Announced_time ||
                     info.Epicenter != LatestInformation.Epicenter ||
                     info.Magnitude != LatestInformation.Magnitude ||
                     info.Depth != LatestInformation.Depth ||
@@ -79,7 +108,7 @@ namespace EarthquakeMap
                 Epicenter = eewobj.region_name,
                 AnnouncedTime = DateTime.Parse(eewobj.report_time),
                 Number = num,
-                EstShindo = Form1.observationPoints.ParseIntensityFromImage(await task)
+                EstShindo = Form1.ObservationPoints.ParseIntensityFromImage(await task)
             };
             LatestEew = eew;
             return (true, false);
