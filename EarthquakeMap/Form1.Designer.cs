@@ -27,7 +27,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.nowtime = new System.Windows.Forms.Label();
             this.infoType = new System.Windows.Forms.Label();
             this.detailTextBox = new System.Windows.Forms.TextBox();
@@ -40,9 +39,6 @@
             this.redrawButton = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.checkBox3 = new System.Windows.Forms.CheckBox();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.keepSetting = new System.Windows.Forms.ComboBox();
-            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -61,7 +57,7 @@
             this.infoType.Font = new System.Drawing.Font("Yu Gothic UI", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.infoType.Location = new System.Drawing.Point(2, 41);
             this.infoType.Name = "infoType";
-            this.infoType.Size = new System.Drawing.Size(218, 51);
+            this.infoType.Size = new System.Drawing.Size(218, 49);
             this.infoType.TabIndex = 1;
             this.infoType.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -70,7 +66,7 @@
             this.detailTextBox.BackColor = System.Drawing.Color.LightGray;
             this.detailTextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.detailTextBox.Font = new System.Drawing.Font("Yu Gothic UI", 10F);
-            this.detailTextBox.Location = new System.Drawing.Point(0, 93);
+            this.detailTextBox.Location = new System.Drawing.Point(0, 95);
             this.detailTextBox.Multiline = true;
             this.detailTextBox.Name = "detailTextBox";
             this.detailTextBox.ReadOnly = true;
@@ -109,33 +105,31 @@
             // cityToArea
             // 
             this.cityToArea.AutoSize = true;
-            this.cityToArea.Location = new System.Drawing.Point(113, 326);
+            this.cityToArea.Location = new System.Drawing.Point(5, 351);
             this.cityToArea.Name = "cityToArea";
-            this.cityToArea.Size = new System.Drawing.Size(107, 21);
+            this.cityToArea.Size = new System.Drawing.Size(169, 21);
             this.cityToArea.TabIndex = 7;
-            this.cityToArea.Text = "描画を地域ごと";
+            this.cityToArea.Text = "地震情報を地域ごとに描画";
             this.cityToArea.UseVisualStyleBackColor = true;
             // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(5, 305);
+            this.checkBox1.Location = new System.Drawing.Point(5, 309);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(79, 21);
             this.checkBox1.TabIndex = 8;
             this.checkBox1.Text = "地震情報";
-            this.toolTip1.SetToolTip(this.checkBox1, "地震情報の地図で、一定の震度以上の範囲で切り取ります。(readme参照)");
             this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(90, 305);
+            this.checkBox2.Location = new System.Drawing.Point(90, 309);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(105, 21);
             this.checkBox2.TabIndex = 9;
             this.checkBox2.Text = "緊急地震速報";
-            this.toolTip1.SetToolTip(this.checkBox2, "緊急地震速報の予測震度マップで、一定の震度以上の範囲で切り取ります。(readme参照)");
             this.checkBox2.UseVisualStyleBackColor = true;
             // 
             // redrawButton
@@ -150,7 +144,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(2, 286);
+            this.label2.Location = new System.Drawing.Point(2, 290);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(163, 17);
             this.label2.TabIndex = 11;
@@ -159,51 +153,18 @@
             // checkBox3
             // 
             this.checkBox3.AutoSize = true;
-            this.checkBox3.Location = new System.Drawing.Point(5, 326);
+            this.checkBox3.Location = new System.Drawing.Point(5, 330);
             this.checkBox3.Name = "checkBox3";
-            this.checkBox3.Size = new System.Drawing.Size(107, 21);
+            this.checkBox3.Size = new System.Drawing.Size(143, 21);
             this.checkBox3.TabIndex = 12;
-            this.checkBox3.Text = "予測を地方ごと";
-            this.toolTip1.SetToolTip(this.checkBox3, "緊急地震速報の府県ごとの予測震度を地方ごとに表示します。");
+            this.checkBox3.Text = "予測を地方ごとに表示";
             this.checkBox3.UseVisualStyleBackColor = true;
-            // 
-            // keepSetting
-            // 
-            this.keepSetting.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.keepSetting.FormattingEnabled = true;
-            this.keepSetting.Items.AddRange(new object[] {
-            "維持しない",
-            "震度3以上",
-            "震度4以上",
-            "震度5弱以上",
-            "震度5強以上",
-            "震度6弱以上",
-            "震度6強以上",
-            "震度7",
-            "切り替えない"});
-            this.keepSetting.Location = new System.Drawing.Point(74, 347);
-            this.keepSetting.Name = "keepSetting";
-            this.keepSetting.Size = new System.Drawing.Size(140, 25);
-            this.keepSetting.TabIndex = 14;
-            this.toolTip1.SetToolTip(this.keepSetting, "現在表示されている地震情報の表示を維持するか設定します。\r\n設定した震度以上の情報（緊急地震速報or地震情報）が発表された場合、この設定は解除されます。\r\n「切り" +
-        "替えない」を選択した場合は、手動で解除するまでこの情報が維持されます。");
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(2, 350);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(70, 17);
-            this.label3.TabIndex = 13;
-            this.label3.Text = "情報を維持";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(993, 435);
-            this.Controls.Add(this.keepSetting);
-            this.Controls.Add(this.label3);
             this.Controls.Add(this.checkBox3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.redrawButton);
@@ -219,7 +180,7 @@
             this.Font = new System.Drawing.Font("Yu Gothic UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "Form1";
             this.Text = "EarthquakeMap";
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).EndInit();
@@ -242,9 +203,6 @@
         private System.Windows.Forms.Button redrawButton;
         private System.Windows.Forms.Label label2;
         internal System.Windows.Forms.CheckBox checkBox3;
-        private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Label label3;
-        internal System.Windows.Forms.ComboBox keepSetting;
     }
 }
 
