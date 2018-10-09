@@ -79,7 +79,7 @@ namespace EarthquakeMap
                 Epicenter = eewobj.region_name,
                 AnnouncedTime = DateTime.Parse(eewobj.report_time),
                 Number = num,
-                EstShindo = Form1.observationPoints.ParseIntensityFromImage(await task)
+                EstShindo = Form1.ObservationPoints.ParseIntensityFromImage(await task)
             };
             LatestEew = eew;
             return (true, false);

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using EarthquakeMap.Enums;
@@ -19,13 +20,14 @@ using Microsoft.JScript;
 using Microsoft.VisualBasic;
 using Strings = Microsoft.VisualBasic.Strings;
 using static EarthquakeMap.Utilities;
+using Timer = System.Windows.Forms.Timer;
 
 namespace EarthquakeMap
 {
     public partial class Form1 : Form
     {
-        internal static ObservationPoint[] observationPoints;
-        internal static Dictionary<string, string> _cityToArea;
+        internal static ObservationPoint[] ObservationPoints;
+        internal static Dictionary<string, string> CityToArea;
         private DateTime _now, _time;
         private FontFamily _koruriFont;
         private Bitmap _mainBitmap;
@@ -40,7 +42,7 @@ namespace EarthquakeMap
         //private bool _cityToAreaFlag;
         private int _myPointIndex;
         private bool _forceInfo;
-        private Timer _timer = new Timer {Interval = 5 * 60 * 1000};
+        private readonly Timer _timer = new Timer {Interval = 5 * 60 * 1000};
         private Dictionary<string, string> _prefToAreaDictionary;
 
         public Form1()
@@ -55,14 +57,14 @@ namespace EarthquakeMap
             var pfc = new PrivateFontCollection();
             pfc.AddFontFile("Koruri-Regular.ttf");
             _koruriFont = pfc.Families[0];
-            observationPoints = ObservationPoint.LoadFromMpk(
+            ObservationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
             myPointComboBox.SelectedIndexChanged += (s, e) =>
                 _myPointIndex = myPointComboBox.SelectedIndex;
 
             myPointComboBox.Items.AddRange(
-                observationPoints.Select(x => $"{x.Region} {x.Name}").ToArray());
+                ObservationPoints.Select(x => $"{x.Region} {x.Name}").ToArray());
             _myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
             myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
             cityToArea.Checked = Settings.Default.cityToArea;
@@ -89,14 +91,19 @@ namespace EarthquakeMap
             };
             timer.Elapsed += this.TimerElapsed;
 
-            _cityToArea = Resources.CityToArea.Replace("\r", "").Split('\n')
+            CityToArea = Resources.CityToArea.Replace("\r", "").Split('\n')
                 .Select(x => x.Split(',')).Where(x => x.Length == 2)
                 .ToDictionary(x => x[0], x => x[1]);
             this._prefToAreaDictionary =
                 Resources.kyoshin_area.Replace("\r", "").Split('\n')
                     .Select(x => x.Split(','))
                     .ToDictionary(x => x[0], x => x[1]);
-            
+            this.mainPicbox.Paint += (s, e) => {
+                if (this._mainBitmap == null) return;
+                var img = this._mainBitmap;
+                e.Graphics.DrawImage(img, 0, 0);
+            };
+
             try {
                 await SetTime();
                 timer.Start();
@@ -115,8 +122,7 @@ namespace EarthquakeMap
             }
             //_time = new DateTime(2018, 5, 24, 1, 25, 50);
         }
-
-        //private DateTime _time = new DateTime(2016, 11, 22, 6, 0, 0);
+        
         private async void TimerElapsed()
         {
             if (_now.Minute % 10 == 0 &&
@@ -125,6 +131,7 @@ namespace EarthquakeMap
             } else
                 _now = _now.AddSeconds(0.1);
 
+            Bitmap pic = null;
             //時刻補正
             var time = this._now;
             Console.WriteLine(time.ToString("HH:mm:ss.fff"));
@@ -154,14 +161,15 @@ namespace EarthquakeMap
                 _isFirst = false;
                 goto last;
             }
+
             if (!infoflag && !eewflag) goto last;
             if (_timer.Enabled) _timer.Stop();
             try {
                 var font1 = new Font(_koruriFont, 20f, FontStyle.Bold);
                 var font2 = new Font(_koruriFont, 12f);
                 var font3 = new Font(_koruriFont, 19f, FontStyle.Bold);
-                _mainBitmap = new Bitmap(773, 435);
-                var g = Graphics.FromImage(_mainBitmap);
+                pic = new Bitmap(773, 435);
+                var g = Graphics.FromImage(pic);
                 g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 var format = new StringFormat {
@@ -352,7 +360,7 @@ namespace EarthquakeMap
                         eew.IsWarn == this._isWarn &&
                         eew.OccurrenceTime == this._lastTime)
                         goto last;
-                    using (var bmp = await Map.EewMap.Draw(this.checkBox2.Checked)) {
+                    using (var bmp = await Task.Run( () => Map.EewMap.Draw(this.checkBox2.Checked))) {
                         g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                     }
 
@@ -386,9 +394,8 @@ namespace EarthquakeMap
             last:
             //フォーム関連は最後にまとめて
             try {
-                this.Invoke(new Action(() => {
+                this.BeginInvoke(new Action(() => {
                     if (IsDisposed) return;
-                    if (_mainBitmap != null) SwapImage(_mainBitmap);
                     if (infotype != null) {
                         if (infotype == "警報") {
                             infoType.ForeColor = Color.Red;
@@ -403,15 +410,26 @@ namespace EarthquakeMap
                     }
                     if (detailText != null)
                         detailTextBox.Text = detailText;
+                    if (pic != null)
+                    {
+                        var old = this._mainBitmap;
+                        this._mainBitmap = pic;
+                        old?.Dispose();
+                        this.mainPicbox.Refresh();
+                    }
                 }));
             } catch {
 
             }
         }
 
-        private void SwapImage(Image image)
+        private void SwapImage(Image newImage)
         {
-            mainPicbox.Image = image;
+            if (this.mainPicbox == null)
+                throw new ArgumentNullException(nameof(this.mainPicbox));
+            var oldImg = this.mainPicbox.Image;
+            this.mainPicbox.Image = newImage;
+            oldImg?.Dispose();
         }
 
         ///// <summary>
