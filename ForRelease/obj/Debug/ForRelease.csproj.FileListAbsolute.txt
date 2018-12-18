@@ -1,0 +1,7 @@
+D:\Programs\C#\AllInformationViewer2\ForRelease\bin\Debug\ForRelease.exe.config
+D:\Programs\C#\AllInformationViewer2\ForRelease\bin\Debug\ForRelease.exe
+D:\Programs\C#\AllInformationViewer2\ForRelease\bin\Debug\ForRelease.pdb
+D:\Programs\C#\AllInformationViewer2\ForRelease\obj\Debug\ForRelease.csprojResolveAssemblyReference.cache
+D:\Programs\C#\AllInformationViewer2\ForRelease\obj\Debug\ForRelease.csproj.CoreCompileInputs.cache
+D:\Programs\C#\AllInformationViewer2\ForRelease\obj\Debug\ForRelease.exe
+D:\Programs\C#\AllInformationViewer2\ForRelease\obj\Debug\ForRelease.pdb

@@ -2,9 +2,10 @@
 using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
-using EarthquakeMap.Enums;
+using System.Windows.Forms;
 using EarthquakeMap.Objects;
 using Codeplex.Data;
+using EarthquakeLibrary;
 using EarthquakeLibrary.Information;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
@@ -36,8 +37,37 @@ namespace EarthquakeMap
             //a = false;
             //変化あるか確認
             if (info != null) {
-                if (info.InformationType != InformationType.Other &&
-                    info.InformationType != InformationType.UnknownSesimic &&
+                if (info.InformationType == InformationType.Other ||
+                    info.InformationType == InformationType.UnknownSesimic)
+                {
+                    if (!_isLastUnknown && LatestInformation == null)
+                    {
+                        var flag = info.Oldinfo?.Any() != true;
+                        if (flag)
+                        {
+                            info = await Information.GetNewEarthquakeInformationFromYahooAsync();
+                        }
+
+                        MessageBox.Show(flag
+                                ? @"指定された地震情報URLは震度不明地震（海外地震等）のため、最新の地震情報を表示します。"
+                                : @"最新の地震情報が震度不明地震（海外地震等）のため、1つ前の地震情報を表示します。",
+                            @"EqMap", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+
+                        if (!flag ||
+                            info.InformationType == InformationType.Other ||
+                            info.InformationType == InformationType.UnknownSesimic)
+                        {
+                            info = await Information.GetNewEarthquakeInformationFromYahooAsync(
+                                info.Oldinfo.Skip(1).First(x => x.MaxIntensity != Intensity.Unknown)
+                                    .Info_url);
+                        }
+                        infoflag = true;
+                        LatestInformation = info;
+                        _isLastUnknown = true;
+                    }
+                }
+
+                else if (
                     LatestInformation == null ||
                     info.Origin_time != LatestInformation.Origin_time ||
                     //info.Announced_time != LatestInformation.Announced_time ||

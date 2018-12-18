@@ -8,6 +8,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EarthquakeLibrary;
 using EarthquakeMap.Properties;
 using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
@@ -41,12 +42,12 @@ namespace EarthquakeMap.Map
                     });
                 if (!cityToArea &&
                 (info.InformationType == InformationType.EarthquakeInfo ||
-                info.MaxIntensity == JmaIntensity.Int1 ||
-                    info.MaxIntensity == JmaIntensity.Int2)) {
+                info.MaxIntensity == Intensity.Int1 ||
+                    info.MaxIntensity == Intensity.Int2)) {
                     var cityInt = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = z,
-                            Intensity = x.Intensity.ToLongString().Replace("震度", "")
+                            Intensity = x.Intensity.LongString.Replace("震度", "")
                         }))).ToDictionary(city => city.Place, city => city.Intensity);
                     var citySorted = new Dictionary<float[], string>();
                     cityInt = cityInt.OrderBy(x => x.Value, new IntensityComparer())
@@ -160,7 +161,7 @@ namespace EarthquakeMap.Map
                     var areaInt_ = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = info.InformationType == InformationType.EarthquakeInfo ? Form1.CityToArea[z] : z,
-                            Intensity = x.Intensity.ToLongString().Replace("震度", "")
+                            Intensity = x.Intensity.LongString.Replace("震度", "")
                         })));
                     var areaInt = new Dictionary<string, string>();
                     foreach (var ai in areaInt_.Where(x => !areaInt.ContainsKey(x.Place)))
@@ -195,7 +196,7 @@ namespace EarthquakeMap.Map
                     var yMax = filtered.Max(x => x.Key[1]);
                     var centerX = (xMin + xMax) / 2;
                     var centerY = (yMin + yMax) / 2;
-                    //var maxint = info.MaxIntensity.ToLongString().Replace("震度", "");
+                    //var maxint = info.MaxIntensity.LongString.Replace("震度", "");
                     //var centerX = filtered.Where(x => x.Value == maxint).Select(x => x.Key[0]).Average();
                     //var centerY = filtered.Where(x => x.Value == maxint).Select(x => x.Key[1]).Average();
 
@@ -286,7 +287,7 @@ namespace EarthquakeMap.Map
         private static Dictionary<float[], string> FilterDrawIntensity(Dictionary<float[], string> intList)
         {
             var dictionary = new Dictionary<float[], string>();
-            switch (InformationsChecker.LatestInformation.MaxIntensity.ToShortString()) {
+            switch (InformationsChecker.LatestInformation.MaxIntensity.ShortString) {
                 case "1":
                 case "2":
                 case "3":

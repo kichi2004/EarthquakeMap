@@ -1,0 +1,5 @@
+#通常は編集しないでください。
+#有効/無効：Enableで有効、Disableで無効。
+test=Enable
+#日時：yyyyMMddHHmmss形式
+time=20160416012600

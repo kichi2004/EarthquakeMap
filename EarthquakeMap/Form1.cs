@@ -98,11 +98,24 @@ namespace EarthquakeMap
                 Resources.kyoshin_area.Replace("\r", "").Split('\n')
                     .Select(x => x.Split(','))
                     .ToDictionary(x => x[0], x => x[1]);
-            this.mainPicbox.Paint += (s, e) => {
+            this.mainPicbox.Paint += (s, e) =>
+            {
                 if (this._mainBitmap == null) return;
                 var img = this._mainBitmap;
                 e.Graphics.DrawImage(img, 0, 0);
             };
+
+
+        //テスト設定読み込み
+        reset:
+            try
+            {
+                var passes = new[] {@"config\url.txt", @"config\eew.txt"};
+                if (!Directory.Exists("config"))
+                    Directory.CreateDirectory("config");
+                if (!File.Exists(passes[0]))
+                    using (var st = File.CreateText(passes[0]))
+                        st.Write(Information.YahooUrl);
 
             try {
                 await SetTime();
@@ -303,8 +316,9 @@ namespace EarthquakeMap
                         }
                     }
                     var sindDetail = new StringBuilder();
-                    foreach (var sind1 in info.Shindo) {
-                        sindDetail.Append($"［{sind1.Intensity.ToLongString()}］");
+                    foreach (var sind1 in info.Shindo)
+                    {
+                        sindDetail.Append($"［{sind1.Intensity.LongString}］");
                         var places = sind1.Place.SelectMany(x => x.Place);
                         sindDetail.AppendLine(string.Join(" ", places));
                     }
@@ -360,7 +374,8 @@ namespace EarthquakeMap
                         eew.IsWarn == this._isWarn &&
                         eew.OccurrenceTime == this._lastTime)
                         goto last;
-                    using (var bmp = await Task.Run( () => Map.EewMap.Draw(this.checkBox2.Checked))) {
+                    using (var bmp = await Task.Run( () => Map.EewMap.Draw(this.checkBox2.Checked)))
+                    {
                         g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                     }
 
@@ -393,7 +408,8 @@ namespace EarthquakeMap
 
             last:
             //フォーム関連は最後にまとめて
-            try {
+            try
+            {
                 this.BeginInvoke(new Action(() => {
                     if (IsDisposed) return;
                     if (infotype != null) {
@@ -410,12 +426,13 @@ namespace EarthquakeMap
                     }
                     if (detailText != null)
                         detailTextBox.Text = detailText;
+
                     if (pic != null)
                     {
                         var old = this._mainBitmap;
                         this._mainBitmap = pic;
-                        old?.Dispose();
                         this.mainPicbox.Refresh();
+                        old?.Dispose();
                     }
                 }));
             } catch {
@@ -425,11 +442,11 @@ namespace EarthquakeMap
 
         private void SwapImage(Image newImage)
         {
-            if (this.mainPicbox == null)
-                throw new ArgumentNullException(nameof(this.mainPicbox));
-            var oldImg = this.mainPicbox.Image;
+            //if (this.mainPicbox == null)
+            //    throw new ArgumentNullException(nameof(this.mainPicbox));
+            //var oldImg = this.mainPicbox.Image;
             this.mainPicbox.Image = newImage;
-            oldImg?.Dispose();
+            //oldImg?.Dispose();
         }
 
         ///// <summary>
