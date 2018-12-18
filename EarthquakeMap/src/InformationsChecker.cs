@@ -3,13 +3,12 @@ using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using EarthquakeMap.Enums;
 using EarthquakeMap.Objects;
 using Codeplex.Data;
+using EarthquakeLibrary;
 using EarthquakeLibrary.Information;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
-using JmaIntensity = EarthquakeLibrary.Core.JmaIntensity;
 
 namespace EarthquakeMap
 {
@@ -58,7 +57,7 @@ namespace EarthquakeMap
                             info.InformationType == InformationType.UnknownSesimic)
                         {
                             info = await Information.GetNewEarthquakeInformationFromYahooAsync(
-                                info.Oldinfo.Skip(1).First(x => x.MaxIntensity != JmaIntensity.Unknown)
+                                info.Oldinfo.Skip(1).First(x => x.MaxIntensity != Intensity.Unknown)
                                     .Info_url);
                         }
                         infoflag = true;

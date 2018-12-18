@@ -97,8 +97,16 @@ namespace EarthquakeMap
                 Resources.kyoshin_area.Replace("\r", "").Split('\n')
                     .Select(x => x.Split(','))
                     .ToDictionary(x => x[0], x => x[1]);
-            //テスト設定読み込み
-            reset:
+            this.mainPicbox.Paint += (s, e) =>
+            {
+                if (this._mainBitmap == null) return;
+                var img = this._mainBitmap;
+                e.Graphics.DrawImage(img, 0, 0);
+            };
+
+
+        //テスト設定読み込み
+        reset:
             try
             {
                 var passes = new[] {@"config\url.txt", @"config\eew.txt"};
@@ -163,6 +171,7 @@ time=20180101000000");
             else
                 _now = _now.AddSeconds(0.1);
 
+            Bitmap pic = null;
             //時刻補正
             var time = this._now;
             Console.WriteLine(time.ToString("HH:mm:ss.fff"));
@@ -207,8 +216,8 @@ time=20180101000000");
                 var font1 = new Font(_koruriFont, 20f, FontStyle.Bold);
                 var font2 = new Font(_koruriFont, 12f);
                 var font3 = new Font(_koruriFont, 19f, FontStyle.Bold);
-                _mainBitmap = new Bitmap(773, 435);
-                var g = Graphics.FromImage(_mainBitmap);
+                pic = new Bitmap(773, 435);
+                var g = Graphics.FromImage(pic);
                 g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 var format = new StringFormat {
@@ -366,7 +375,7 @@ time=20180101000000");
                     var sindDetail = new StringBuilder();
                     foreach (var sind1 in info.Shindo)
                     {
-                        sindDetail.Append($"［{sind1.Intensity.ToLongString()}］");
+                        sindDetail.Append($"［{sind1.Intensity.LongString}］");
                         var places = sind1.Place.SelectMany(x => x.Place);
                         sindDetail.AppendLine(string.Join(" ", places));
                     }
@@ -431,7 +440,7 @@ time=20180101000000");
                         eew.IsWarn == this._isWarn &&
                         eew.OccurrenceTime == this._lastTime)
                         goto last;
-                    using (var bmp = await Map.EewMap.Draw(this.checkBox2.Checked))
+                    using (var bmp = await Task.Run( () => Map.EewMap.Draw(this.checkBox2.Checked)))
                     {
                         g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                     }
@@ -469,7 +478,7 @@ time=20180101000000");
             //フォーム関連は最後にまとめて
             try
             {
-                this.Invoke(new Action(() => {
+                this.BeginInvoke(new Action(() => {
                     if (IsDisposed) return;
                     if (_mainBitmap != null) SwapImage(_mainBitmap);
                     if (infotype != null)
@@ -493,6 +502,14 @@ time=20180101000000");
 
                     if (detailText != null)
                         detailTextBox.Text = detailText;
+
+                    if (pic != null)
+                    {
+                        var old = this._mainBitmap;
+                        this._mainBitmap = pic;
+                        this.mainPicbox.Refresh();
+                        old?.Dispose();
+                    }
                 }));
             }
             catch { }
@@ -500,9 +517,11 @@ time=20180101000000");
 
         private void SwapImage(Image newImage)
         {
-            var image = this.mainPicbox.Image;
-            mainPicbox.Image = newImage;
-            //image?.Dispose();
+            //if (this.mainPicbox == null)
+            //    throw new ArgumentNullException(nameof(this.mainPicbox));
+            //var oldImg = this.mainPicbox.Image;
+            this.mainPicbox.Image = newImage;
+            //oldImg?.Dispose();
         }
 
         ///// <summary>
