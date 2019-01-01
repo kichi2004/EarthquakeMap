@@ -15,7 +15,6 @@ namespace EarthquakeMap
     internal static class InformationsChecker
     {
         internal static NewEarthquakeInformation LatestInformation { get; private set; }
-        private static bool _isLastUnknown;
         internal static Eew LatestEew { get; private set; }
 
         private static int _lastnum;
@@ -31,7 +30,9 @@ namespace EarthquakeMap
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0
                 ? null
-                : await Information.GetNewEarthquakeInformationFromYahooAsync(Form1.Url);
+                : await Information.GetNewEarthquakeInformationFromYahooAsync(
+                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20160416012510.html?t=1"
+                );
 
             //a = false;
             //変化あるか確認
@@ -69,6 +70,7 @@ namespace EarthquakeMap
                 else if (
                     LatestInformation == null ||
                     info.Origin_time != LatestInformation.Origin_time ||
+                    //info.Announced_time != LatestInformation.Announced_time ||
                     info.Epicenter != LatestInformation.Epicenter ||
                     info.Magnitude != LatestInformation.Magnitude ||
                     info.Depth != LatestInformation.Depth ||
