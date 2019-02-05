@@ -7,14 +7,6 @@
 
 \.vs/
 
-EarthquakeMap/bin/
-
-EarthquakeMap/obj/
-
-EarthquakeMap/Form2\.cs
-
-EarthquakeMap/Form2\.Designer\.cs
-
 EarthquakeMap/EarthquakeMap\.csproj\.user
 
 ForRelease/
@@ -22,8 +14,6 @@ ForRelease/
 packages/
 
 packages/
-
-\.vs/
 
 # User-specific files
 *.suo
