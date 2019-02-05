@@ -22,3 +22,6 @@ EarthquakeMap ソースコードはMITライセンスに基づき公開してい
 
 **条件**
 - ライセンス及び著作権表示
+
+
+使用している「EarthquakeLibrary」は[こちら](https://github.com/Kichi2525yt/EarthuquakeLibrary)で公開しています。
