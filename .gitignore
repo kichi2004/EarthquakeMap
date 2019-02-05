@@ -5,6 +5,22 @@
 /.vs/AllInformationViewer2/v15
 /AllInformationViewer2/obj
 
+\.vs/
+
+EarthquakeMap/bin/
+
+EarthquakeMap/obj/
+
+EarthquakeMap/Form2\.cs
+
+EarthquakeMap/Form2\.Designer\.cs
+
+EarthquakeMap/EarthquakeMap\.csproj\.user
+
+ForRelease/
+
+packages/
+
 packages/
 
 \.vs/

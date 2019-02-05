@@ -64,7 +64,7 @@ namespace EarthquakeMap
                 _myPointIndex = myPointComboBox.SelectedIndex;
 
             myPointComboBox.Items.AddRange(
-                ObservationPoints.Select(x => $"{x.Region} {x.Name}").ToArray());
+                ObservationPoints.Select(x => $"{x.Region} {x.Name}" as object).ToArray());
             _myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
             myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
             cityToArea.Checked = Settings.Default.cityToArea;
@@ -189,6 +189,18 @@ namespace EarthquakeMap
                     Alignment = StringAlignment.Center
                 };
                 var brush = Brushes.White;
+                var selectedIndex = -1;
+                this.Invoke((Action) (() => { selectedIndex = this.keepSetting.SelectedIndex; }));
+                if (infoflag)
+                {
+                    var info = InformationsChecker.LatestInformation;
+                    if (selectedIndex != 0)
+                    {
+                        if ((int) info.MaxIntensity < selectedIndex + 3) {
+                            this.Invoke((Action)(() => { this.keepSetting.SelectedIndex = 0; }));
+                            goto last;
+                        }
+                    }
 
                 if (infoflag) {
                     var info = InformationsChecker.LatestInformation;
