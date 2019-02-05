@@ -56,7 +56,8 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EarthquakeLibrary">
+    <Reference Include="EarthquakeLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\EarthquakeLibrary\EarthquakeLibrary\bin\Release\EarthquakeLibrary.dll</HintPath>
     </Reference>
     <Reference Include="kmoni">

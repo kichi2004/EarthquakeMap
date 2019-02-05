@@ -18,6 +18,7 @@ namespace EarthquakeMap
         internal static Eew LatestEew { get; private set; }
 
         private static int _lastnum;
+        private static bool _isLastUnknown;
         private static string _lastId;
         //private static bool a = true;
         internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false) {
