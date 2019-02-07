@@ -69,6 +69,7 @@ namespace EarthquakeMap
                 }
 
                 else if (
+
                     LatestInformation == null ||
                     info.Origin_time != LatestInformation.Origin_time ||
                     //info.Announced_time != LatestInformation.Announced_time ||
@@ -97,9 +98,10 @@ namespace EarthquakeMap
 
             var task = DownloadImageAsync($"http://www.kmoni.bosai.go.jp/new/data/" +
                                           $"map_img/EstShindoImg/eew/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.eew.gif");
-            var eew = new Eew {
+            var eew = new Eew
+            {
                 IsWarn = eewobj.alertflg == "警報",
-                MaxIntensity = Intensity.Parse(eewobj.calcintensity),
+                MaxIntensity = Enums.Intensity.Parse(eewobj.calcintensity),
                 Depth = int.Parse(eewobj.depth.Replace("km", "")),
                 IsLast = eewobj.is_final,
                 Coordinate = new Coordinate(float.Parse(eewobj.latitude),

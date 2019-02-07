@@ -43,6 +43,7 @@ namespace EarthquakeMap
         private bool _forceInfo;
         private readonly Timer _timer = new Timer { Interval = 5 * 60 * 1000 };
         private Dictionary<string, string> _prefToAreaDictionary;
+        private VersionChecker _checker;
 
         public Form1()
         {
@@ -158,6 +159,9 @@ time=20180101000000");
                     }
                 };
             }
+
+            _checker = new VersionChecker();
+            _checker.Check();
         }
 
         private async void TimerElapsed()
@@ -165,6 +169,8 @@ time=20180101000000");
             if (_now.Minute % 10 == 0 &&
                 _now.Second == 0 && _now.Millisecond <= 100)
             {
+                if((_now.Hour == 6 || _now.Hour == 18) && _now.Minute == 0)
+                    _checker.Check();
                 await SetTime();
             }
             else
@@ -173,7 +179,7 @@ time=20180101000000");
             Bitmap pic = null;
             //時刻補正
             var time = this._now;
-            Console.WriteLine(time.ToString("HH:mm:ss.fff"));
+            //Console.WriteLine(time.ToString("HH:mm:ss.fff"));
             if (time.Millisecond > 100) return;
             //できれば予測震度とか載せたいけどとりあえず放置
             this.BeginInvoke(new Action(() =>
