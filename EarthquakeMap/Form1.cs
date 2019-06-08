@@ -81,6 +81,10 @@ namespace EarthquakeMap
                 e.Graphics.DrawImage(img, 0, 0);
             };
             this.saveImageButton.Click += (s, e) => SaveImage();
+            this.detailTextBox.KeyDown += (s, e) =>
+            {
+                if(e.Control && e.KeyCode == Keys.A) detailTextBox.SelectAll();
+            };
 
 
             //設定保存
