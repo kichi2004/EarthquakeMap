@@ -1,6 +1,6 @@
 #EarthquakeMapについて
 地震情報や緊急地震速報を取得して地図を描画するソフトウェアです。
-[こちら]()で配布しています。
+[こちら](https://software.kichi2004.jp/2018/05/21/eqmap/)で配布しています。
 
 
 #ライセンス
@@ -22,3 +22,6 @@ EarthquakeMap ソースコードはMITライセンスに基づき公開してい
 
 **条件**
 - ライセンス及び著作権表示
+
+
+使用している「EarthquakeLibrary」は[こちら](https://github.com/Kichi2525yt/EarthuquakeLibrary)で公開しています。

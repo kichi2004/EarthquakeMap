@@ -5,9 +5,15 @@
 /.vs/AllInformationViewer2/v15
 /AllInformationViewer2/obj
 
+\.vs/
+
+EarthquakeMap/EarthquakeMap\.csproj\.user
+
+ForRelease/
+
 packages/
 
-\.vs/
+packages/
 
 # User-specific files
 *.suo

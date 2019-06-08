@@ -1,5 +1,0 @@
-#通常は編集しないでください。
-#有効/無効：Enableで有効、Disableで無効。
-test=Disable
-#日時：yyyyMMddHHmmss形式
-time=20180101000000
