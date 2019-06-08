@@ -88,14 +88,7 @@ namespace EarthquakeMap
 
 
             //設定保存
-            this.FormClosing += (s, e) => {
-                Settings.Default.myPointIndex = _myPointIndex;
-                Settings.Default.cityToArea = cityToArea.Checked;
-                Settings.Default.cutOnInfo = checkBox1.Checked;
-                Settings.Default.cutOnEew = checkBox2.Checked;
-                Settings.Default.eewArea = this.checkBox3.Checked;
-                Settings.Default.Save();
-            };
+            this.FormClosing += SaveSettings;
             this._timer.Tick += (s, e) => this._forceInfo = true;
 
             var timer = new FixedTimer()
@@ -115,7 +108,7 @@ namespace EarthquakeMap
         reset:
             try
             {
-                var passes = new[] { @"config\url.txt", @"config\eew.txt" };
+                var passes = new[] { @"config\url.txt", @"config\eew.txt", @"config\position.txt" };
                 if (!Directory.Exists("config"))
                     Directory.CreateDirectory("config");
                 if (!File.Exists(passes[0]))
@@ -135,6 +128,17 @@ time=20180101000000");
                 this._isTest = Convert.ToBoolean(eewtxt[2].Split('=').ElementAtOrDefault(1) == "Enable");
                 this._time = DateTime.ParseExact(eewtxt[4].Split('=')[1], "yyyyMMddHHmmss",
                     CultureInfo.CurrentCulture, DateTimeStyles.None);
+                if(!File.Exists(passes[2]))
+                    using (var st = File.CreateText(passes[2]))
+                        st.Write(@"0,0");
+
+                var positionStr = File.ReadLines(passes[2]).First()
+                    .Split(',').Select(a => a.Trim()).ToArray();
+                if (int.TryParse(positionStr[0], out var x) && int.TryParse(positionStr[1], out var y))
+                {
+                    this.Left = x;
+                    this.Top = y;
+                }
             }
             catch
             {
@@ -168,6 +172,21 @@ time=20180101000000");
 
             _checker = new VersionChecker();
             _checker.Check();
+        }
+
+        private void SaveSettings(object s, FormClosingEventArgs e)
+        {
+            Settings.Default.myPointIndex = _myPointIndex;
+            Settings.Default.cityToArea = cityToArea.Checked;
+            Settings.Default.cutOnInfo = checkBox1.Checked;
+            Settings.Default.cutOnEew = checkBox2.Checked;
+            Settings.Default.eewArea = this.checkBox3.Checked;
+            Settings.Default.Save();
+
+
+            if (!Directory.Exists("config"))
+                Directory.CreateDirectory("config");
+            File.WriteAllText("config/position.txt", $@"{this.Left},{this.Top}");
         }
 
         private async void TimerElapsed()
