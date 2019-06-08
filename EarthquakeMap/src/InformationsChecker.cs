@@ -23,10 +23,10 @@ namespace EarthquakeMap
         //private static bool a = true;
         internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false) {
             //新強震取得
-            var eew_json = await DownloadStringAsync(
+            var eewJson = await DownloadStringAsync(
                 $"http://www.kmoni.bosai.go.jp/new/webservice/hypo/eew/" +
                 $"{time:yyyyMMddHHmmss}.json");
-            var eewobj = DynamicJson.Parse(eew_json);
+            var eewobj = DynamicJson.Parse(eewJson);
             var infoflag = false;
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0

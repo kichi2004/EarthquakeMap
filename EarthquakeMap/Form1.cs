@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
@@ -9,12 +10,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
 using EarthquakeMap.Enums;
 using EarthquakeMap.Properties;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace EarthquakeMap
 {
@@ -48,6 +49,7 @@ namespace EarthquakeMap
         public Form1()
         {
             InitializeComponent();
+            // ReSharper disable once AssignmentIsFullyDiscarded
             _ = Handle;
             Initialize();
         }
@@ -56,20 +58,20 @@ namespace EarthquakeMap
         {
             var pfc = new PrivateFontCollection();
             pfc.AddFontFile("Koruri-Regular.ttf");
-            _koruriFont = pfc.Families[0];
+            this._koruriFont = pfc.Families[0];
             ObservationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
-            myPointComboBox.SelectedIndexChanged += (s, e) =>
-                _myPointIndex = myPointComboBox.SelectedIndex;
+            this.myPointComboBox.SelectedIndexChanged += (s, e) =>
+                this._myPointIndex = myPointComboBox.SelectedIndex;
 
-            myPointComboBox.Items.AddRange(
+            this.myPointComboBox.Items.AddRange(
                 ObservationPoints.Select(x => $"{x.Region} {x.Name}" as object).ToArray());
-            _myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
-            myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
-            cityToArea.Checked = Settings.Default.cityToArea;
-            checkBox1.Checked = Settings.Default.cutOnInfo;
-            checkBox2.Checked = Settings.Default.cutOnEew;
+            this._myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            this.myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            this.cityToArea.Checked = Settings.Default.cityToArea;
+            this.checkBox1.Checked = Settings.Default.cutOnInfo;
+            this.checkBox2.Checked = Settings.Default.cutOnEew;
             this.checkBox3.Checked = Settings.Default.eewArea;
             this.keepSetting.SelectedIndex = 0;
             redrawButton.Click += (s, e) =>
@@ -79,17 +81,15 @@ namespace EarthquakeMap
                 var img = this._mainBitmap;
                 e.Graphics.DrawImage(img, 0, 0);
             };
+            this.saveImageButton.Click += (s, e) => SaveImage();
+            this.detailTextBox.KeyDown += (s, e) =>
+            {
+                if(e.Control && e.KeyCode == Keys.A) detailTextBox.SelectAll();
+            };
 
 
             //設定保存
-            this.FormClosing += (s, e) => {
-                Settings.Default.myPointIndex = _myPointIndex;
-                Settings.Default.cityToArea = cityToArea.Checked;
-                Settings.Default.cutOnInfo = checkBox1.Checked;
-                Settings.Default.cutOnEew = checkBox2.Checked;
-                Settings.Default.eewArea = this.checkBox3.Checked;
-                Settings.Default.Save();
-            };
+            this.FormClosing += SaveSettings;
             this._timer.Tick += (s, e) => this._forceInfo = true;
 
             var timer = new FixedTimer()
@@ -109,7 +109,7 @@ namespace EarthquakeMap
         reset:
             try
             {
-                var passes = new[] { @"config\url.txt", @"config\eew.txt" };
+                var passes = new[] { @"config\url.txt", @"config\eew.txt", @"config\position.txt" };
                 if (!Directory.Exists("config"))
                     Directory.CreateDirectory("config");
                 if (!File.Exists(passes[0]))
@@ -129,6 +129,17 @@ time=20180101000000");
                 this._isTest = Convert.ToBoolean(eewtxt[2].Split('=').ElementAtOrDefault(1) == "Enable");
                 this._time = DateTime.ParseExact(eewtxt[4].Split('=')[1], "yyyyMMddHHmmss",
                     CultureInfo.CurrentCulture, DateTimeStyles.None);
+                if(!File.Exists(passes[2]))
+                    using (var st = File.CreateText(passes[2]))
+                        st.Write(@"0,0");
+
+                var positionStr = File.ReadLines(passes[2]).First()
+                    .Split(',').Select(a => a.Trim()).ToArray();
+                if (int.TryParse(positionStr[0], out var x) && int.TryParse(positionStr[1], out var y))
+                {
+                    this.Left = x;
+                    this.Top = y;
+                }
             }
             catch
             {
@@ -162,6 +173,21 @@ time=20180101000000");
 
             _checker = new VersionChecker();
             _checker.Check();
+        }
+
+        private void SaveSettings(object s, FormClosingEventArgs e)
+        {
+            Settings.Default.myPointIndex = _myPointIndex;
+            Settings.Default.cityToArea = cityToArea.Checked;
+            Settings.Default.cutOnInfo = checkBox1.Checked;
+            Settings.Default.cutOnEew = checkBox2.Checked;
+            Settings.Default.eewArea = this.checkBox3.Checked;
+            Settings.Default.Save();
+
+            if (this.Left + this.Width <= 0 || this.Top + this.Height <= 0) return;
+            if (!Directory.Exists("config"))
+                Directory.CreateDirectory("config");
+            File.WriteAllText("config/position.txt", $@"{this.Left},{this.Top}");
         }
 
         private async void TimerElapsed()
@@ -347,7 +373,7 @@ time=20180101000000");
                         {
                             var b = epi == null;
                             if (b) epi = info.Epicenter;
-                            g.DrawImage(Image.FromFile(@"Images\Jishin\" + (b ? "Summary1.png" : "Summary2.png")),
+                            g.DrawImage(Image.FromFile(@"materials\Jishin\" + (b ? "Summary1.png" : "Summary2.png")),
                                 new Point(495, 5));
                             g.DrawString(epi, new Font(_koruriFont, 20f), brush, new Point(587, 12));
                             g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
@@ -370,7 +396,7 @@ time=20180101000000");
                                 epicenterPoint = new Point(506, 47);
                             }
 
-                            g.DrawImage(Image.FromFile(@"Images\Jishin\Summary2.png"), new Point(495, 5));
+                            g.DrawImage(Image.FromFile(@"materials\Jishin\Summary2.png"), new Point(495, 5));
                             g.DrawString(info.Epicenter, epicenterFont, brush, epicenterPoint);
                             g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
                                 new Point(587, 85));
@@ -442,7 +468,7 @@ time=20180101000000");
                         eew.Coordinate.Longitude == this._longitude &&
                         eew.Depth == this._depth &&
                         eew.Magnitude == this._magnitude &&
-                        eew.MaxIntensity == this._lastIntensity &&
+                        eew.MaxIntensity.Equals(this._lastIntensity) &&
                         eew.IsWarn == this._isWarn &&
                         eew.OccurrenceTime == this._lastTime)
                         goto last;
@@ -480,11 +506,12 @@ time=20180101000000");
                 Console.WriteLine(e);
             }
 
-        last:
+            last:
             //フォーム関連は最後にまとめて
             try
             {
-                this.BeginInvoke(new Action(() => {
+                this.BeginInvoke(new Action(() =>
+                {
                     if (IsDisposed) return;
                     if (infotype != null)
                     {
@@ -492,11 +519,11 @@ time=20180101000000");
                         {
                             case "警報":
                                 this.infoType.ForeColor = Color.Red;
-                                this.infoType.Text = "緊急地震速報";
+                                this.infoType.Text = @"緊急地震速報";
                                 break;
                             case "予報":
                                 this.infoType.ForeColor = Color.Black;
-                                this.infoType.Text = "EEW予測震度";
+                                this.infoType.Text = @"EEW予測震度";
                                 break;
                             default:
                                 this.infoType.ForeColor = Color.Black;
@@ -507,18 +534,19 @@ time=20180101000000");
 
                     if (detailText != null)
                         detailTextBox.Text = detailText;
-                    if (pic != null)
-                    {
-                        var old = this._mainBitmap;
-                        this._mainBitmap = pic;
-                        old?.Dispose();
-                        this.mainPicbox.Refresh();
-                    }
+                    if (pic == null) return;
+                    var old = this._mainBitmap;
+                    this._mainBitmap = pic;
+                    old?.Dispose();
+                    this.mainPicbox.Refresh();
                 }));
             }
-            catch { }
+            catch
+            {
+                //失敗してもとりあえず何もしない
+            }
         }
-
+        /*
         private void SwapImage(Image newImage)
         {
             if (this.mainPicbox == null)
@@ -528,26 +556,27 @@ time=20180101000000");
             oldImg?.Dispose();
         }
 
-        ///// <summary>
-        ///// 強震モニタの画像を取得します。
-        ///// </summary>
-        ///// <param name="time">取得する時刻</param>
-        ///// <returns></returns>
-        //private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
-        //{
-        //    time = time.AddSeconds(-1);
-        //    //強震モニタ画像取得
-        //    string kmoniUrl =
-        //        $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
-        //        $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
-        //    Bitmap res = null;
-        //    try {
-        //        res = await DownloadImageAsync(kmoniUrl);
-        //    } catch {
-        //        res = null;
-        //    }
-        //    return res;
-        //}
+        /// <summary>
+        /// 強震モニタの画像を取得します。
+        /// </summary>
+        /// <param name="time">取得する時刻</param>
+        /// <returns></returns>
+        private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
+        {
+            time = time.AddSeconds(-1);
+            //強震モニタ画像取得
+            string kmoniUrl =
+                $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
+                $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
+            Bitmap res = null;
+            try {
+                res = await DownloadImageAsync(kmoniUrl);
+            } catch {
+                res = null;
+            }
+            return res;
+        }
+        */
 
         /// <summary>
         /// 時刻を合わせます。
@@ -560,6 +589,30 @@ time=20180101000000");
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();
             _now = time;
+        }
+
+        private void SaveImage()
+        {
+            if (this._mainBitmap == null) return;
+            if (!Directory.Exists("images"))
+                Directory.CreateDirectory("images");
+            var fileNameBase = $"images/{DateTime.Now:yyyyMMddHHmmss}";
+            var fileName = fileNameBase + ".png";
+            if (File.Exists(fileName))
+            {
+                var flag = true;
+                for (var i = 1; i <= 99; i++)
+                {
+                    fileName = $"{fileNameBase}_{i}.png";
+                    if (File.Exists(fileName)) continue;
+                    flag = false;
+                    break;
+                }
+
+                if (flag) return;
+            }
+
+            this._mainBitmap?.Save(fileName, ImageFormat.Png);
         }
     }
 }
