@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
@@ -56,20 +57,20 @@ namespace EarthquakeMap
         {
             var pfc = new PrivateFontCollection();
             pfc.AddFontFile("Koruri-Regular.ttf");
-            _koruriFont = pfc.Families[0];
+            this._koruriFont = pfc.Families[0];
             ObservationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
-            myPointComboBox.SelectedIndexChanged += (s, e) =>
-                _myPointIndex = myPointComboBox.SelectedIndex;
+            this.myPointComboBox.SelectedIndexChanged += (s, e) =>
+                this._myPointIndex = myPointComboBox.SelectedIndex;
 
-            myPointComboBox.Items.AddRange(
+            this.myPointComboBox.Items.AddRange(
                 ObservationPoints.Select(x => $"{x.Region} {x.Name}" as object).ToArray());
-            _myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
-            myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
-            cityToArea.Checked = Settings.Default.cityToArea;
-            checkBox1.Checked = Settings.Default.cutOnInfo;
-            checkBox2.Checked = Settings.Default.cutOnEew;
+            this._myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            this.myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            this.cityToArea.Checked = Settings.Default.cityToArea;
+            this.checkBox1.Checked = Settings.Default.cutOnInfo;
+            this.checkBox2.Checked = Settings.Default.cutOnEew;
             this.checkBox3.Checked = Settings.Default.eewArea;
             this.keepSetting.SelectedIndex = 0;
             redrawButton.Click += (s, e) =>
@@ -79,6 +80,7 @@ namespace EarthquakeMap
                 var img = this._mainBitmap;
                 e.Graphics.DrawImage(img, 0, 0);
             };
+            this.saveImageButton.Click += (s, e) => SaveImage();
 
 
             //設定保存
@@ -347,7 +349,7 @@ time=20180101000000");
                         {
                             var b = epi == null;
                             if (b) epi = info.Epicenter;
-                            g.DrawImage(Image.FromFile(@"Images\Jishin\" + (b ? "Summary1.png" : "Summary2.png")),
+                            g.DrawImage(Image.FromFile(@"materials\Jishin\" + (b ? "Summary1.png" : "Summary2.png")),
                                 new Point(495, 5));
                             g.DrawString(epi, new Font(_koruriFont, 20f), brush, new Point(587, 12));
                             g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
@@ -370,7 +372,7 @@ time=20180101000000");
                                 epicenterPoint = new Point(506, 47);
                             }
 
-                            g.DrawImage(Image.FromFile(@"Images\Jishin\Summary2.png"), new Point(495, 5));
+                            g.DrawImage(Image.FromFile(@"materials\Jishin\Summary2.png"), new Point(495, 5));
                             g.DrawString(info.Epicenter, epicenterFont, brush, epicenterPoint);
                             g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
                                 new Point(587, 85));
@@ -560,6 +562,30 @@ time=20180101000000");
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();
             _now = time;
+        }
+
+        private void SaveImage()
+        {
+            if (this._mainBitmap == null) return;
+            if (!Directory.Exists("images"))
+                Directory.CreateDirectory("images");
+            var fileNameBase = $"images/{DateTime.Now:yyyyMMddHHmmss}";
+            var fileName = fileNameBase + ".png";
+            if (File.Exists(fileName))
+            {
+                var flag = true;
+                for (var i = 1; i <= 99; i++)
+                {
+                    fileName = $"{fileNameBase}_{i}.png";
+                    if (File.Exists(fileName)) continue;
+                    flag = false;
+                    break;
+                }
+
+                if (flag) return;
+            }
+
+            this._mainBitmap?.Save(fileName, ImageFormat.Png);
         }
     }
 }

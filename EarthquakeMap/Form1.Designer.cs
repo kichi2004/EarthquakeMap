@@ -44,6 +44,7 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.keepSetting = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.saveImageButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -141,9 +142,9 @@
             // 
             // redrawButton
             // 
-            this.redrawButton.Location = new System.Drawing.Point(5, 374);
+            this.redrawButton.Location = new System.Drawing.Point(3, 374);
             this.redrawButton.Name = "redrawButton";
-            this.redrawButton.Size = new System.Drawing.Size(209, 25);
+            this.redrawButton.Size = new System.Drawing.Size(140, 25);
             this.redrawButton.TabIndex = 10;
             this.redrawButton.Text = "地震情報再取得・描画";
             this.redrawButton.UseVisualStyleBackColor = true;
@@ -198,11 +199,21 @@
             this.label3.TabIndex = 13;
             this.label3.Text = "情報を維持";
             // 
+            // saveImageButton
+            // 
+            this.saveImageButton.Location = new System.Drawing.Point(144, 374);
+            this.saveImageButton.Name = "saveImageButton";
+            this.saveImageButton.Size = new System.Drawing.Size(70, 25);
+            this.saveImageButton.TabIndex = 15;
+            this.saveImageButton.Text = "画像保存";
+            this.saveImageButton.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(993, 435);
+            this.Controls.Add(this.saveImageButton);
             this.Controls.Add(this.keepSetting);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.checkBox3);
@@ -246,6 +257,7 @@
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Label label3;
         internal System.Windows.Forms.ComboBox keepSetting;
+        private System.Windows.Forms.Button saveImageButton;
     }
 }
 
