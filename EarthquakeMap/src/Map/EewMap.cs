@@ -22,7 +22,7 @@ namespace EarthquakeMap.Map
         private const double LatMax = 46.56;
         private const double LonMin = 121.93;
         private const double LonMax = 149.75;
-        private const string ImagePath = @"Images\Jishin\";
+        private const string ImagePath = @"materials\Jishin\";
 
         private static readonly string[] IntList = { "7", "6強", "6弱", "5強", "5弱", "4", "3", "2", "1" };
         public static async Task<Bitmap> Draw(bool filter = true)
