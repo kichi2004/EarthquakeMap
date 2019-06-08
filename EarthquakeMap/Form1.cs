@@ -509,18 +509,16 @@ time=20180101000000");
 
                     if (detailText != null)
                         detailTextBox.Text = detailText;
-                    if (pic != null)
-                    {
-                        var old = this._mainBitmap;
-                        this._mainBitmap = pic;
-                        old?.Dispose();
-                        this.mainPicbox.Refresh();
-                    }
+                    if (pic == null) return;
+                    var old = this._mainBitmap;
+                    this._mainBitmap = pic;
+                    old?.Dispose();
+                    this.mainPicbox.Refresh();
                 }));
             }
             catch { }
         }
-
+        /*
         private void SwapImage(Image newImage)
         {
             if (this.mainPicbox == null)
@@ -530,26 +528,27 @@ time=20180101000000");
             oldImg?.Dispose();
         }
 
-        ///// <summary>
-        ///// 強震モニタの画像を取得します。
-        ///// </summary>
-        ///// <param name="time">取得する時刻</param>
-        ///// <returns></returns>
-        //private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
-        //{
-        //    time = time.AddSeconds(-1);
-        //    //強震モニタ画像取得
-        //    string kmoniUrl =
-        //        $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
-        //        $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
-        //    Bitmap res = null;
-        //    try {
-        //        res = await DownloadImageAsync(kmoniUrl);
-        //    } catch {
-        //        res = null;
-        //    }
-        //    return res;
-        //}
+        /// <summary>
+        /// 強震モニタの画像を取得します。
+        /// </summary>
+        /// <param name="time">取得する時刻</param>
+        /// <returns></returns>
+        private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
+        {
+            time = time.AddSeconds(-1);
+            //強震モニタ画像取得
+            string kmoniUrl =
+                $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
+                $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
+            Bitmap res = null;
+            try {
+                res = await DownloadImageAsync(kmoniUrl);
+            } catch {
+                res = null;
+            }
+            return res;
+        }
+        */
 
         /// <summary>
         /// 時刻を合わせます。
