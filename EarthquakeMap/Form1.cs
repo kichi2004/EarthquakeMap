@@ -10,12 +10,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
 using EarthquakeMap.Enums;
 using EarthquakeMap.Properties;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace EarthquakeMap
 {
@@ -49,6 +49,7 @@ namespace EarthquakeMap
         public Form1()
         {
             InitializeComponent();
+            // ReSharper disable once AssignmentIsFullyDiscarded
             _ = Handle;
             Initialize();
         }
@@ -183,7 +184,7 @@ time=20180101000000");
             Settings.Default.eewArea = this.checkBox3.Checked;
             Settings.Default.Save();
 
-
+            if (this.Left + this.Width <= 0 || this.Top + this.Height <= 0) return;
             if (!Directory.Exists("config"))
                 Directory.CreateDirectory("config");
             File.WriteAllText("config/position.txt", $@"{this.Left},{this.Top}");
@@ -467,7 +468,7 @@ time=20180101000000");
                         eew.Coordinate.Longitude == this._longitude &&
                         eew.Depth == this._depth &&
                         eew.Magnitude == this._magnitude &&
-                        eew.MaxIntensity == this._lastIntensity &&
+                        eew.MaxIntensity.Equals(this._lastIntensity) &&
                         eew.IsWarn == this._isWarn &&
                         eew.OccurrenceTime == this._lastTime)
                         goto last;
@@ -505,11 +506,12 @@ time=20180101000000");
                 Console.WriteLine(e);
             }
 
-        last:
+            last:
             //フォーム関連は最後にまとめて
             try
             {
-                this.BeginInvoke(new Action(() => {
+                this.BeginInvoke(new Action(() =>
+                {
                     if (IsDisposed) return;
                     if (infotype != null)
                     {
@@ -517,11 +519,11 @@ time=20180101000000");
                         {
                             case "警報":
                                 this.infoType.ForeColor = Color.Red;
-                                this.infoType.Text = "緊急地震速報";
+                                this.infoType.Text = @"緊急地震速報";
                                 break;
                             case "予報":
                                 this.infoType.ForeColor = Color.Black;
-                                this.infoType.Text = "EEW予測震度";
+                                this.infoType.Text = @"EEW予測震度";
                                 break;
                             default:
                                 this.infoType.ForeColor = Color.Black;
@@ -539,7 +541,10 @@ time=20180101000000");
                     this.mainPicbox.Refresh();
                 }));
             }
-            catch { }
+            catch
+            {
+                //失敗してもとりあえず何もしない
+            }
         }
         /*
         private void SwapImage(Image newImage)
