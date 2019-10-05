@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -222,7 +222,7 @@ time=20180101000000");
                 //↓_timeでテスト用
                 var f = _isFirst;
                 _isFirst = false;
-                (eewflag, infoflag) = await InformationsChecker.Get(_isTest ? _time : time, _forceInfo || f);
+                (eewflag, infoflag) = await InformationsChecker.Get(_isTest ? _time : time, _forceInfo || f, Url);
                 if (_isTest)
                     _time = _time.AddSeconds(1);
 
