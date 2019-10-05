@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -21,7 +21,7 @@ namespace EarthquakeMap
         private static bool _isLastUnknown;
         private static string _lastId;
         //private static bool a = true;
-        internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false) {
+        internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false, string url = null) {
             //新強震取得
             var eewJson = await DownloadStringAsync(UrlGenerator.GenerateEewJson(time));
             var eewobj = DynamicJson.Parse(eewJson);
@@ -30,7 +30,7 @@ namespace EarthquakeMap
             var info = !forceInfo && time.Second % 20 != 0
                 ? null
                 : await Information.GetNewEarthquakeInformationFromYahooAsync(
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20160416012510.html?t=1"
+                    url ?? Information.YahooUrl
                 );
 
             //a = false;
