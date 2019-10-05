@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -58,50 +58,50 @@ namespace EarthquakeMap
         {
             var pfc = new PrivateFontCollection();
             pfc.AddFontFile("Koruri-Regular.ttf");
-            this._koruriFont = pfc.Families[0];
+            _koruriFont = pfc.Families[0];
             ObservationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
-            this.myPointComboBox.SelectedIndexChanged += (s, e) =>
-                this._myPointIndex = myPointComboBox.SelectedIndex;
+            myPointComboBox.SelectedIndexChanged += (s, e) =>
+                _myPointIndex = myPointComboBox.SelectedIndex;
 
-            this.myPointComboBox.Items.AddRange(
+            myPointComboBox.Items.AddRange(
                 ObservationPoints.Select(x => $"{x.Region} {x.Name}" as object).ToArray());
-            this._myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
-            this.myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
-            this.cityToArea.Checked = Settings.Default.cityToArea;
-            this.checkBox1.Checked = Settings.Default.cutOnInfo;
-            this.checkBox2.Checked = Settings.Default.cutOnEew;
-            this.checkBox3.Checked = Settings.Default.eewArea;
-            this.keepSetting.SelectedIndex = 0;
+            _myPointIndex = myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            myPointComboBox.SelectedIndex = Settings.Default.myPointIndex;
+            cityToArea.Checked = Settings.Default.cityToArea;
+            checkBox1.Checked = Settings.Default.cutOnInfo;
+            checkBox2.Checked = Settings.Default.cutOnEew;
+            checkBox3.Checked = Settings.Default.eewArea;
+            keepSetting.SelectedIndex = 0;
             redrawButton.Click += (s, e) =>
                 _forceInfo = true;
-            this.mainPicbox.Paint += (s, e) => {
-                if (this._mainBitmap == null) return;
-                var img = this._mainBitmap;
+            mainPicbox.Paint += (s, e) => {
+                if (_mainBitmap == null) return;
+                var img = _mainBitmap;
                 e.Graphics.DrawImage(img, 0, 0);
             };
-            this.saveImageButton.Click += (s, e) => SaveImage();
-            this.detailTextBox.KeyDown += (s, e) =>
+            saveImageButton.Click += (s, e) => SaveImage();
+            detailTextBox.KeyDown += (s, e) =>
             {
                 if(e.Control && e.KeyCode == Keys.A) detailTextBox.SelectAll();
             };
 
 
             //設定保存
-            this.FormClosing += SaveSettings;
-            this._timer.Tick += (s, e) => this._forceInfo = true;
+            FormClosing += SaveSettings;
+            _timer.Tick += (s, e) => _forceInfo = true;
 
             var timer = new FixedTimer()
             {
                 Interval = TimeSpan.FromMilliseconds(100)
             };
-            timer.Elapsed += this.TimerElapsed;
+            timer.Elapsed += TimerElapsed;
 
             CityToArea = Resources.CityToArea.Replace("\r", "").Split('\n')
                 .Select(x => x.Split(',')).Where(x => x.Length == 2)
                 .ToDictionary(x => x[0], x => x[1]);
-            this._prefToAreaDictionary =
+            _prefToAreaDictionary =
                 Resources.kyoshin_area.Replace("\r", "").Split('\n')
                     .Select(x => x.Split(','))
                     .ToDictionary(x => x[0], x => x[1]);
@@ -116,7 +116,7 @@ namespace EarthquakeMap
                     using (var st = File.CreateText(passes[0]))
                         st.Write(Information.YahooUrl);
 
-                Url = File.ReadAllText(passes[0]).Replace("\r\n", "");
+                Url = File.ReadAllText(passes[0]).Trim();
 
                 if (!File.Exists(passes[1]))
                     using (var st = File.CreateText(passes[1]))
@@ -126,8 +126,8 @@ test=Disable
 #日時：yyyyMMddHHmmss形式
 time=20180101000000");
                 var eewtxt = File.ReadAllLines(passes[1]);
-                this._isTest = Convert.ToBoolean(eewtxt[2].Split('=').ElementAtOrDefault(1) == "Enable");
-                this._time = DateTime.ParseExact(eewtxt[4].Split('=')[1], "yyyyMMddHHmmss",
+                _isTest = Convert.ToBoolean(eewtxt[2].Split('=').ElementAtOrDefault(1) == "Enable");
+                _time = DateTime.ParseExact(eewtxt[4].Split('=')[1], "yyyyMMddHHmmss",
                     CultureInfo.CurrentCulture, DateTimeStyles.None);
                 if(!File.Exists(passes[2]))
                     using (var st = File.CreateText(passes[2]))
@@ -137,8 +137,8 @@ time=20180101000000");
                     .Split(',').Select(a => a.Trim()).ToArray();
                 if (int.TryParse(positionStr[0], out var x) && int.TryParse(positionStr[1], out var y))
                 {
-                    this.Left = x;
-                    this.Top = y;
+                    Left = x;
+                    Top = y;
                 }
             }
             catch
@@ -181,13 +181,13 @@ time=20180101000000");
             Settings.Default.cityToArea = cityToArea.Checked;
             Settings.Default.cutOnInfo = checkBox1.Checked;
             Settings.Default.cutOnEew = checkBox2.Checked;
-            Settings.Default.eewArea = this.checkBox3.Checked;
+            Settings.Default.eewArea = checkBox3.Checked;
             Settings.Default.Save();
 
-            if (this.Left + this.Width <= 0 || this.Top + this.Height <= 0) return;
+            if (Left + Width <= 0 || Top + Height <= 0) return;
             if (!Directory.Exists("config"))
                 Directory.CreateDirectory("config");
-            File.WriteAllText("config/position.txt", $@"{this.Left},{this.Top}");
+            File.WriteAllText("config/position.txt", $@"{Left},{Top}");
         }
 
         private async void TimerElapsed()
@@ -204,11 +204,11 @@ time=20180101000000");
 
             Bitmap pic = null;
             //時刻補正
-            var time = this._now;
+            var time = _now;
             //Console.WriteLine(time.ToString("HH:mm:ss.fff"));
             if (time.Millisecond > 100) return;
             //できれば予測震度とか載せたいけどとりあえず放置
-            this.BeginInvoke(new Action(() =>
+            BeginInvoke(new Action(() =>
                 nowtime.Text = _now.ToString("HH:mm:ss")));
 
             //var kmoniImage = await GetKyoshinMonitorImageAsync(time.AddSeconds(-1));
@@ -257,7 +257,7 @@ time=20180101000000");
                 };
                 var brush = Brushes.White;
                 var selectedIndex = -1;
-                this.Invoke((Action)(() => { selectedIndex = this.keepSetting.SelectedIndex; }));
+                Invoke((Action)(() => { selectedIndex = keepSetting.SelectedIndex; }));
                 if (infoflag)
                 {
                     var info = InformationsChecker.LatestInformation;
@@ -265,7 +265,7 @@ time=20180101000000");
                     {
                         if ((int)info.MaxIntensity >= selectedIndex + 3)
                             goto last;
-                        this.Invoke((Action)(() => { this.keepSetting.SelectedIndex = 0; }));
+                        Invoke((Action)(() => { keepSetting.SelectedIndex = 0; }));
                     }
 
                     switch (info.InformationType)
@@ -387,12 +387,12 @@ time=20180101000000");
                             Font epicenterFont;
                             if (info.Epicenter.Length == 10)
                             {
-                                epicenterFont = new Font(this._koruriFont, 18f);
+                                epicenterFont = new Font(_koruriFont, 18f);
                                 epicenterPoint = new Point(506, 49);
                             }
                             else
                             {
-                                epicenterFont = new Font(this._koruriFont, 20f);
+                                epicenterFont = new Font(_koruriFont, 20f);
                                 epicenterPoint = new Point(506, 47);
                             }
 
@@ -422,7 +422,7 @@ time=20180101000000");
                     {
                         if (eew.MaxIntensity.EnumOrder >= selectedIndex + 3)
                             goto last;
-                        this.Invoke((Action)(() => { this.keepSetting.SelectedIndex = 0; }));
+                        Invoke((Action)(() => { keepSetting.SelectedIndex = 0; }));
                     }
 
                     infotype = eew.IsWarn ? "警報" : "予報";
@@ -433,7 +433,7 @@ time=20180101000000");
                     //EEW予測震度画像を取得・解析
                     var estShindo = eew.EstShindo.ToArray();
                     var mypResult = "";
-                    var myPoint = estShindo[this._myPointIndex];
+                    var myPoint = estShindo[_myPointIndex];
                     if (myPoint != null)
                     {
                         var val = myPoint.AnalysisResult;
@@ -443,10 +443,10 @@ time=20180101000000");
                     }
 
                     var res = estShindo.Where(x => x.AnalysisResult >= 0.5);
-                    var res2 = this.checkBox3.Checked
+                    var res2 = checkBox3.Checked
                         ? res
                             .Select(x => (
-                                Region: this._prefToAreaDictionary[x.Region],
+                                Region: _prefToAreaDictionary[x.Region],
                                 Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f),
                                 Value: x.AnalysisResult ?? 0.0f
                             ))
@@ -464,26 +464,26 @@ time=20180101000000");
                                 .Distinct(new IntensityEqualComparer()).GroupBy(x => x.Item2)
                                 .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"));
                     //地図描画
-                    if (eew.Coordinate.Latitude == this._latitude &&
-                        eew.Coordinate.Longitude == this._longitude &&
-                        eew.Depth == this._depth &&
-                        eew.Magnitude == this._magnitude &&
-                        eew.MaxIntensity.Equals(this._lastIntensity) &&
-                        eew.IsWarn == this._isWarn &&
-                        eew.OccurrenceTime == this._lastTime)
+                    if (eew.Coordinate.Latitude == _latitude &&
+                        eew.Coordinate.Longitude == _longitude &&
+                        eew.Depth == _depth &&
+                        eew.Magnitude == _magnitude &&
+                        eew.MaxIntensity.Equals(_lastIntensity) &&
+                        eew.IsWarn == _isWarn &&
+                        eew.OccurrenceTime == _lastTime)
                         goto last;
-                    using (var bmp = await Task.Run(() => Map.EewMap.Draw(this.checkBox2.Checked)))
+                    using (var bmp = await Task.Run(() => Map.EewMap.Draw(checkBox2.Checked)))
                     {
                         g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                     }
 
-                    this._latitude = eew.Coordinate.Latitude;
-                    this._longitude = eew.Coordinate.Longitude;
-                    this._depth = eew.Depth;
-                    this._magnitude = eew.Magnitude;
-                    this._isWarn = eew.IsWarn;
-                    this._lastIntensity = eew.MaxIntensity;
-                    this._lastTime = eew.OccurrenceTime;
+                    _latitude = eew.Coordinate.Latitude;
+                    _longitude = eew.Coordinate.Longitude;
+                    _depth = eew.Depth;
+                    _magnitude = eew.Magnitude;
+                    _isWarn = eew.IsWarn;
+                    _lastIntensity = eew.MaxIntensity;
+                    _lastTime = eew.OccurrenceTime;
                     //文字描画
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 260, 120);
                     g.DrawString($"最大震度 {max}", font1, brush, new Rectangle(10, 12, 230, 39), format);
@@ -510,7 +510,7 @@ time=20180101000000");
             //フォーム関連は最後にまとめて
             try
             {
-                this.BeginInvoke(new Action(() =>
+                BeginInvoke(new Action(() =>
                 {
                     if (IsDisposed) return;
                     if (infotype != null)
@@ -518,16 +518,16 @@ time=20180101000000");
                         switch (infotype)
                         {
                             case "警報":
-                                this.infoType.ForeColor = Color.Red;
-                                this.infoType.Text = @"緊急地震速報";
+                                infoType.ForeColor = Color.Red;
+                                infoType.Text = @"緊急地震速報";
                                 break;
                             case "予報":
-                                this.infoType.ForeColor = Color.Black;
-                                this.infoType.Text = @"EEW予測震度";
+                                infoType.ForeColor = Color.Black;
+                                infoType.Text = @"EEW予測震度";
                                 break;
                             default:
-                                this.infoType.ForeColor = Color.Black;
-                                this.infoType.Text = infotype;
+                                infoType.ForeColor = Color.Black;
+                                infoType.Text = infotype;
                                 break;
                         }
                     }
@@ -535,10 +535,10 @@ time=20180101000000");
                     if (detailText != null)
                         detailTextBox.Text = detailText;
                     if (pic == null) return;
-                    var old = this._mainBitmap;
-                    this._mainBitmap = pic;
+                    var old = _mainBitmap;
+                    _mainBitmap = pic;
                     old?.Dispose();
-                    this.mainPicbox.Refresh();
+                    mainPicbox.Refresh();
                 }));
             }
             catch
@@ -593,7 +593,7 @@ time=20180101000000");
 
         private void SaveImage()
         {
-            if (this._mainBitmap == null) return;
+            if (_mainBitmap == null) return;
             if (!Directory.Exists("images"))
                 Directory.CreateDirectory("images");
             var fileNameBase = $"images/{DateTime.Now:yyyyMMddHHmmss}";
@@ -612,7 +612,7 @@ time=20180101000000");
                 if (flag) return;
             }
 
-            this._mainBitmap?.Save(fileName, ImageFormat.Png);
+            _mainBitmap?.Save(fileName, ImageFormat.Png);
         }
     }
 }

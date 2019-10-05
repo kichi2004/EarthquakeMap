@@ -228,17 +228,17 @@ namespace EarthquakeMap.Enums
         }
 
         public bool Equals(Intensity other) {
-            return this.EnumOrder == other.EnumOrder;
+            return EnumOrder == other.EnumOrder;
         }
 
         public override bool Equals(object obj) {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == this.GetType() && this.Equals((Intensity) obj);
+            return obj.GetType() == GetType() && Equals((Intensity) obj);
         }
 
         public override int GetHashCode() {
-            return this.EnumOrder;
+            return EnumOrder;
         }
     }
 }
