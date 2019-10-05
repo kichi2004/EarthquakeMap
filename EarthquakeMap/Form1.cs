@@ -291,7 +291,7 @@ time=20180101000000");
                     //文字描画
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 5,
                         190, 40);
-                    g.DrawString($"{info.Origin_time:H時mm分}ごろ", font3, brush, 12, 7);
+                    g.DrawString($"{info.OriginTime:H時mm分}ごろ", font3, brush, 12, 7);
 
                     if (isDetail)
                     {
@@ -566,7 +566,7 @@ time=20180101000000");
             time = time.AddSeconds(-1);
             //強震モニタ画像取得
             string kmoniUrl =
-                $"http://www.kmoni.bosai.go.jp/new/data/map_img/RealTimeImg/" +
+                $"http://www.kmoni.bosai.go.jp/data/map_img/RealTimeImg/" +
                 $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
             Bitmap res = null;
             try {
