@@ -21,18 +21,16 @@ namespace EarthquakeMap
         private static bool _isLastUnknown;
         private static string _lastId;
         //private static bool a = true;
-        internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false) {
+        internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false, string url = null) {
             //新強震取得
-            var eewJson = await DownloadStringAsync(
-                $"http://www.kmoni.bosai.go.jp/new/webservice/hypo/eew/" +
-                $"{time:yyyyMMddHHmmss}.json");
+            var eewJson = await DownloadStringAsync(UrlGenerator.GenerateEewJson(time));
             var eewobj = DynamicJson.Parse(eewJson);
             var infoflag = false;
             //地震情報取得
             var info = !forceInfo && time.Second % 20 != 0
                 ? null
                 : await Information.GetNewEarthquakeInformationFromYahooAsync(
-                //"https://typhoon.yahoo.co.jp/weather/jp/earthquake/20160416012510.html?t=1"
+                    url ?? Information.YahooUrl
                 );
 
             //a = false;
@@ -71,7 +69,7 @@ namespace EarthquakeMap
                 else if (
 
                     LatestInformation == null ||
-                    info.Origin_time != LatestInformation.Origin_time ||
+                    info.OriginTime != LatestInformation.OriginTime ||
                     //info.Announced_time != LatestInformation.Announced_time ||
                     info.Epicenter != LatestInformation.Epicenter ||
                     info.Magnitude != LatestInformation.Magnitude ||
@@ -96,8 +94,7 @@ namespace EarthquakeMap
             _lastnum = num;
             _lastId = id;
 
-            var task = DownloadImageAsync($"http://www.kmoni.bosai.go.jp/new/data/" +
-                                          $"map_img/EstShindoImg/eew/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.eew.gif");
+            var task = DownloadImageAsync(UrlGenerator.GenerateEewImage(time));
             var eew = new Eew
             {
                 IsWarn = eewobj.alertflg == "警報",
