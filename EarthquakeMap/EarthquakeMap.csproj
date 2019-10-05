@@ -98,6 +98,7 @@
     <Compile Include="src\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Map\QuakeMap.cs" />
+    <Compile Include="src\UrlGenerator.cs" />
     <Compile Include="src\Utilities.cs" />
     <Compile Include="VersionChecker.cs" />
     <EmbeddedResource Include="Form1.resx">
