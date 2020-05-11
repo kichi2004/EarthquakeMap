@@ -470,8 +470,10 @@ time=20180101000000");
                         eew.Magnitude == _magnitude &&
                         eew.MaxIntensity.Equals(_lastIntensity) &&
                         eew.IsWarn == _isWarn &&
-                        eew.OccurrenceTime == _lastTime)
+                        eew.OccurrenceTime == _lastTime) {
+                        pic = null;
                         goto last;
+                    }
                     using (var bmp = await Task.Run(() => Map.EewMap.Draw(checkBox2.Checked)))
                     {
                         g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
@@ -495,6 +497,7 @@ time=20180101000000");
                     g.DrawString($"M{eew.Magnitude:0.0}", font2, brush, new Point(102, 84));
                     g.DrawString("発生時刻", font2, brush, new Point(25, 104));
                     g.DrawString($"{eew.OccurrenceTime:HH:mm:ss}", font2, brush, new Point(102, 104));
+                    Console.WriteLine("String drawed");
                 }
 
                 font1.Dispose();
