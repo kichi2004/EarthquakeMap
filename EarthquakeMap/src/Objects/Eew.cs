@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using EarthquakeMap.Enums;
+using EarthquakeLibrary;
 using KyoshinMonitorLib;
 
 namespace EarthquakeMap.Objects
