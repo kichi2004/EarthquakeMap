@@ -6,11 +6,9 @@ Released under the MIT License.
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using EarthquakeLibrary;
 using EarthquakeMap.Properties;
-using EarthquakeLibrary.Core;
 using EarthquakeLibrary.Information;
 using static System.Math;
 
@@ -40,17 +38,14 @@ namespace EarthquakeMap.Map
                         info.Location.Latitude,
                         info.Location.Longitude
                     });
-                if (!cityToArea &&
-                (info.InformationType == InformationType.EarthquakeInfo ||
-                info.MaxIntensity == Intensity.Int1 ||
-                    info.MaxIntensity == Intensity.Int2)) {
+                if (!cityToArea && (info.InformationType == InformationType.EarthquakeInfo || info.MaxIntensity == Intensity.Int1 || info.MaxIntensity == Intensity.Int2)) {
                     var cityInt = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = z,
-                            Intensity = x.Intensity.LongString.Replace("震度", "")
+                            Intensity = x.Intensity
                         }))).ToDictionary(city => city.Place, city => city.Intensity);
-                    var citySorted = new Dictionary<float[], string>();
-                    cityInt = cityInt.OrderBy(x => x.Value, new IntensityComparer())
+                    var citySorted = new Dictionary<float[], Intensity>();
+                    cityInt = cityInt.OrderBy(x => x.Value.EnumOrder)
                     .ToDictionary(x => x.Key, x => x.Value);
                     foreach (var keyValue in cityInt) {
                         var point = GetPointCoordinate(Resources.CityPoint, keyValue.Key);
@@ -67,9 +62,9 @@ namespace EarthquakeMap.Map
 
                     // 中心を設定
                     var filtered = filter ? FilterDrawIntensity(cityPixel) : cityPixel;
-                    if (epicenter[0] != 0.0f)   // 震度速報でない
+                    if (epicenter[0] > 1e-5)   // 震度速報でない
                     {
-                        filtered.Add(epicenter, "E");
+                        filtered.Add(epicenter, null);
                     }
                     if (!filtered.Any()) return null;
                     var xMin = filtered.Min(x => x.Key[0]);
@@ -80,8 +75,8 @@ namespace EarthquakeMap.Map
                     var centerY = (yMin + yMax) / 2;
 
                     // 地図を縮小
-                    var areaIntSize = 36f;
-                    var cityIntSize = 24f;
+                    const float areaIntSize = 40f;
+                    var cityIntSize = 32f;
                     var zoomRate = 1f;
                     var diffWidth = filtered.Max(x => x.Key[0]) - filtered.Min(x => x.Key[0]);
                     var diffHeight = filtered.Max(x => x.Key[1]) - filtered.Min(x => x.Key[1]);
@@ -100,7 +95,6 @@ namespace EarthquakeMap.Map
                     cityIntSize = (int)Ceiling(cityIntSize * zoomRate);
 
                     // 画像読み込み
-                    var imageCityList = IntList.Reverse().ToDictionary(intensity => intensity, intensity => new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
 
                     // 地図の範囲外であった場合、拡張する
                     var orgX = (int)Ceiling(centerX) - cutWidth / 2;
@@ -126,6 +120,10 @@ namespace EarthquakeMap.Map
                         }
                     }
 
+                    var font = new Font(new FontFamily("roboto"), cityIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
+                    var sf = new StringFormat
+                        { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+
                     // 描画
                     var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
                     var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
@@ -136,12 +134,34 @@ namespace EarthquakeMap.Map
                     orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                         epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
                     //震度描画
-                    foreach (var pixel in cityPixel) {
-                        if (imageCityList.ContainsKey(pixel.Value)) {
-                            orgCityGraphics.DrawImage(imageCityList[pixel.Value],
-                                pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);
-                        }
+                    foreach (var pixel in cityPixel)
+                    {
+                        if (pixel.Value == null) continue;
+                        var intensity = pixel.Value;
+                        var textColor = intensity.Equals(Intensity.Int3) ||
+                                        intensity.Equals(Intensity.Int4) ||
+                                        intensity.Equals(Intensity.Int5Minus) ||
+                                        intensity.Equals(Intensity.Unknown)
+                            ? Color.Black
+                            : Color.White;
+
+                        orgCityGraphics.FillEllipse(
+                            new SolidBrush(Form1.Colors[intensity.EnumOrder]),
+                            pixel.Key[0] - cityIntSize / 2f + adjustX,
+                            pixel.Key[1] - cityIntSize / 2f + adjustY,
+                            cityIntSize,
+                            cityIntSize
+                        );
+                        orgCityGraphics.DrawString(
+                            intensity.ShortString.Replace('-', '‒'),
+                            font,
+                            new SolidBrush(textColor),
+                            new RectangleF(pixel.Key[0] - cityIntSize + adjustX,
+                                pixel.Key[1] - cityIntSize / 2f + adjustY + cityIntSize / 20f, cityIntSize * 2, cityIntSize),
+                            sf
+                        );
                     }
+
                     orgCityGraphics.Dispose();
 
                     // 切り取り
@@ -158,36 +178,34 @@ namespace EarthquakeMap.Map
                     saveCityGraphics.Dispose();
                     return saveCityBitmap;
                 } else {
-                    var areaInt_ = info.Shindo
+                    var areaIntBase = info.Shindo
                         .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
                             Place = info.InformationType == InformationType.EarthquakeInfo ? Form1.CityToArea[z] : z,
-                            Intensity = x.Intensity.LongString.Replace("震度", "")
+                            x.Intensity
                         })));
-                    var areaInt = new Dictionary<string, string>();
-                    foreach (var ai in areaInt_.Where(x => !areaInt.ContainsKey(x.Place)))
-                        areaInt.Add(ai.Place, ai.Intensity);
+                    var areaInt = new Dictionary<string, Intensity>();
+                    foreach (var ai in areaIntBase.Where(x => !areaInt.ContainsKey(x.Place))) areaInt.Add(ai.Place, ai.Intensity);
                     
-                    var areaStored = new Dictionary<float[], string>();
-                    areaInt = areaInt.OrderBy(x => x.Value, new IntensityComparer())
-                    .ToDictionary(x => x.Key, x => x.Value);
+                    var areaSorted = new Dictionary<float[], Intensity>();
+                    areaInt = areaInt.OrderBy(x => x.Value.EnumOrder).ToDictionary(x => x.Key, x => x.Value);
                     foreach (var keyValue in areaInt) {
                         var point = GetPointCoordinate(Resources.AreaPoint, keyValue.Key);
                         if (point != null) {
-                            areaStored.Add(point, keyValue.Value);
+                            areaSorted.Add(point, keyValue.Value);
                         }
                     }
 
                     // ピクセル座標に変換
-                    var areaPixel = areaStored.ToDictionary(x => ToPixelCoordinate(x.Key), x => x.Value);
+                    var areaPixel = areaSorted.ToDictionary(x => ToPixelCoordinate(x.Key), x => x.Value);
 
                     var cutWidth = 1440;
                     var cutHeight = 810;
 
                     // 中心を設定
                     var filtered = filter ? FilterDrawIntensity(areaPixel) : areaPixel;
-                    if (epicenter[0] != 0.0f)   // 震度速報でない
+                    if (epicenter[0] > 1e-5)   // 震度速報でない
                     {
-                        filtered.Add(epicenter, "E");
+                        filtered.Add(epicenter, null);
                     }
                     if (!filtered.Any()) return null;
                     var xMin = filtered.Min(x => x.Key[0]);
@@ -203,7 +221,6 @@ namespace EarthquakeMap.Map
 
                     // 地図を縮小
                     var areaIntSize = 48f;
-                    //var cityIntSize = 24f;
                     var zoomRate = 1f;
                     var diffWidth = filtered.Max(x => x.Key[0]) - filtered.Min(x => x.Key[0]);
                     var diffHeight = filtered.Max(x => x.Key[1]) - filtered.Min(x => x.Key[1]);
@@ -247,6 +264,9 @@ namespace EarthquakeMap.Map
                             orgY -= orgY + cutHeight - ImageHeight;
                         }
                     }
+                    var font = new Font(new FontFamily("roboto"), areaIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
+                    var sf = new StringFormat
+                        { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
 
                     // 描画
                     var orgAreaBitmap = new Bitmap(ImageWidth, ImageHeight);
@@ -260,11 +280,32 @@ namespace EarthquakeMap.Map
                         orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                             epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
                     //震度描画
-                    foreach (var pixel in areaPixel) {
-                        if (imageAreaList.ContainsKey(pixel.Value)) {
-                            orgAreaGraphics.DrawImage(imageAreaList[pixel.Value],
-                                pixel.Key[0] - areaIntSize / 2 + adjustX, pixel.Key[1] - areaIntSize / 2 + adjustY, areaIntSize, areaIntSize);
-                        }
+                    foreach (var pixel in areaPixel)
+                    {
+                        var intensity = pixel.Value;
+                        var textColor = intensity.Equals(Intensity.Int3) ||
+                                        intensity.Equals(Intensity.Int4) ||
+                                        intensity.Equals(Intensity.Int5Minus) ||
+                                        intensity.Equals(Intensity.Unknown)
+                            ? Color.Black
+                            : Color.White;
+
+                        orgAreaGraphics.FillRectangle(
+                            new SolidBrush(Form1.Colors[intensity.EnumOrder]),
+                            pixel.Key[0] - areaIntSize / 2f + adjustX,
+                            pixel.Key[1] - areaIntSize / 2f + adjustY,
+                            areaIntSize,
+                            areaIntSize
+                        );
+                        orgAreaGraphics.DrawString(
+                            intensity.ShortString.Replace('-', '‒'),
+                            font,
+                            new SolidBrush(textColor),
+                            new RectangleF(pixel.Key[0] - areaIntSize + adjustX,
+                                pixel.Key[1] - areaIntSize / 2f+ adjustY + areaIntSize / 20f,
+                                areaIntSize * 2, areaIntSize),
+                            sf
+                        );
                     }
 
                     orgAreaGraphics.Dispose();
@@ -283,11 +324,11 @@ namespace EarthquakeMap.Map
                 }
             });
         }
-
-        private static Dictionary<float[], string> FilterDrawIntensity(Dictionary<float[], string> intList)
+        private static Dictionary<float[], Intensity> FilterDrawIntensity(Dictionary<float[], Intensity> intList)
         {
-            var dictionary = new Dictionary<float[], string>();
-            switch (InformationsChecker.LatestInformation.MaxIntensity.ShortString) {
+            var dictionary = new Dictionary<float[], Intensity>();
+            switch (InformationsChecker.LatestInformation.MaxIntensity.ShortString)
+            {
                 case "1":
                 case "2":
                 case "3":
@@ -296,20 +337,18 @@ namespace EarthquakeMap.Map
                     break;
                 case "5-":
                 case "5+":
-                    dictionary = intList.Where(x => x.Value == "2" || x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value >= Intensity.Int2).ToDictionary(x => x.Key, x => x.Value);
                     break;
                 case "6-":
                 case "6+":
-                    dictionary = intList.Where(x => x.Value == "3" || x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value >= Intensity.Int3).ToDictionary(x => x.Key, x => x.Value);
                     break;
                 case "7":
-                    dictionary = intList.Where(x => x.Value == "4" || x.Value == "5弱" || x.Value == "5強" || x.Value == "6弱" || x.Value == "6強" || x.Value == "7").ToDictionary(x => x.Key, x => x.Value);
-                    //dictionary = intList.Where(x => x.Value == "7").ToDictionary(x => x.Key, x => x.Value);
+                    dictionary = intList.Where(x => x.Value >= Intensity.Int4).ToDictionary(x => x.Key, x => x.Value);
                     break;
             }
             return dictionary;
         }
-
         private static float[] GetPointCoordinate(string pointList, string name)
         {
             var split = pointList.Split('\n');

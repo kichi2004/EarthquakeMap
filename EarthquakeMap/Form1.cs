@@ -10,11 +10,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using EarthquakeLibrary;
 using EarthquakeLibrary.Information;
-using EarthquakeMap.Enums;
+using EarthquakeMap.Map;
 using EarthquakeMap.Properties;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
+using Timer = System.Timers.Timer;
+
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace EarthquakeMap
@@ -24,10 +27,22 @@ namespace EarthquakeMap
         internal static ObservationPoint[] ObservationPoints;
         internal static Dictionary<string, string> CityToArea;
         internal static string Url;
+        internal static Dictionary<int, Color> Colors = new Dictionary<int, Color>
+        {
+            {1, Color.FromArgb(70, 100, 110)},
+            {2, Color.FromArgb(30, 110, 230)},
+            {3, Color.FromArgb(0, 200, 200)},
+            {4, Color.FromArgb(250, 250, 100)},
+            {5, Color.FromArgb(255, 180, 0)},
+            {6, Color.FromArgb(255, 120, 0)},
+            {7, Color.FromArgb(230, 0, 0)},
+            {8, Color.FromArgb(160, 0, 0)},
+            {9, Color.FromArgb(150, 0, 150)},
+        };
 
         private DateTime _now, _time;
         private FontFamily _koruriFont;
-        private Bitmap _mainBitmap;
+        private Bitmap _mainBitmap, _lastBitmap;
         private bool _isFirst = true;
         private bool _isTest;
         private float _latitude;
@@ -49,7 +64,6 @@ namespace EarthquakeMap
         public Form1()
         {
             InitializeComponent();
-            // ReSharper disable once AssignmentIsFullyDiscarded
             _ = Handle;
             Initialize();
         }
@@ -90,9 +104,9 @@ namespace EarthquakeMap
 
             //設定保存
             FormClosing += SaveSettings;
-            _timer.Tick += (s, e) => _forceInfo = true;
+            _timer.Elapsed += (s, e) => _forceInfo = true;
 
-            var timer = new FixedTimer()
+            var timer = new FixedTimer
             {
                 Interval = TimeSpan.FromMilliseconds(100)
             };
@@ -156,7 +170,7 @@ time=20180101000000");
             catch
             {
                 MessageBox.Show(@"時刻合わせに失敗しました。");
-                var timer2 = new System.Timers.Timer(60000);
+                var timer2 = new Timer(60000);
                 timer2.Elapsed += async (s, e) => {
                     try
                     {
@@ -241,32 +255,38 @@ time=20180101000000");
             }
 
             if (!infoflag && !eewflag) goto last;
-            if (_timer.Enabled) _timer.Stop();
+            var selectedIndex = -1;
+            Invoke((Action)(() => { selectedIndex = keepSetting.SelectedIndex; }));
+            if (selectedIndex != 0)
+            {
+                var intensity = infoflag
+                    ? InformationsChecker.LatestInformation.MaxIntensity
+                    : InformationsChecker.LatestEew.MaxIntensity;
+                if (intensity.EnumOrder < selectedIndex + 2)
+                    goto last;
+            }
             try
             {
-                var font1 = new Font(_koruriFont, 20f, FontStyle.Bold);
-                var font2 = new Font(_koruriFont, 12f);
-                var font3 = new Font(_koruriFont, 19f, FontStyle.Bold);
+                var font9 = new Font(_koruriFont, 9f);
+                var font10 = new Font(_koruriFont, 10f);
+                var font12 = new Font(_koruriFont, 12f);
+                var font14 = new Font(_koruriFont, 14f);
+                var font16 = new Font(_koruriFont, 16f);
+                var font40 = new Font(_koruriFont, 40f);
+                var font20 = new Font(_koruriFont, 20);
+                var font19b = new Font(_koruriFont, 19f, FontStyle.Bold);
+                var font20b = new Font(_koruriFont, 20f, FontStyle.Bold);
+                var roboto = new Font("roboto", 40f);
+                var robotoI = new Font("roboto", 40f, FontStyle.Italic);
                 pic = new Bitmap(773, 435);
                 var g = Graphics.FromImage(pic);
                 g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                var format = new StringFormat
-                {
-                    Alignment = StringAlignment.Center
-                };
                 var brush = Brushes.White;
-                var selectedIndex = -1;
-                Invoke((Action)(() => { selectedIndex = keepSetting.SelectedIndex; }));
                 if (infoflag)
                 {
                     var info = InformationsChecker.LatestInformation;
-                    if (selectedIndex != 0)
-                    {
-                        if ((int)info.MaxIntensity >= selectedIndex + 3)
-                            goto last;
-                        Invoke((Action)(() => { keepSetting.SelectedIndex = 0; }));
-                    }
+                    if (_timer.Enabled) _timer.Stop();
 
                     switch (info.InformationType)
                     {
@@ -284,18 +304,19 @@ time=20180101000000");
                     }
 
                     //地図描画
-                    using (var bmp = await Task.Run(() => Map.QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
+                    using (var bmp = await Task.Run(() => QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
                         if (bmp != null)
                             g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
                     var isDetail = info.InformationType != InformationType.SesimicInfo;
                     //文字描画
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 5,
                         190, 40);
-                    g.DrawString($"{info.OriginTime:H時mm分}ごろ", font3, brush, 12, 7);
+                    g.DrawString($"{info.OriginTime:H時mm分}ごろ", font19b, brush, 12, 7);
 
                     if (isDetail)
                     {
-                        var dictepi = new Dictionary<string, string> {
+                        var dictepi = new Dictionary<string, string>
+                        {
                             {"留萌地方中北部", "留萌地方\r\n中北部"},
                             {"胆振地方中東部", "胆振地方\r\n中東部"},
                             {"釧路地方中南部", "釧路地方\r\n中南部"},
@@ -376,9 +397,9 @@ time=20180101000000");
                             g.DrawImage(Image.FromFile(@"materials\Jishin\" + (b ? "Summary1.png" : "Summary2.png")),
                                 new Point(495, 5));
                             g.DrawString(epi, new Font(_koruriFont, 20f), brush, new Point(587, 12));
-                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
+                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font20b, brush,
                                 b ? new Point(587, 52) : new Point(587, 85));
-                            g.DrawString($"M{info.Magnitude:0.0}", font1, brush,
+                            g.DrawString($"M{info.Magnitude:0.0}", font20b, brush,
                                 b ? new Point(587, 94) : new Point(587, 126));
                         }
                         else
@@ -398,9 +419,9 @@ time=20180101000000");
 
                             g.DrawImage(Image.FromFile(@"materials\Jishin\Summary2.png"), new Point(495, 5));
                             g.DrawString(info.Epicenter, epicenterFont, brush, epicenterPoint);
-                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
+                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font20b, brush,
                                 new Point(587, 85));
-                            g.DrawString($"M{info.Magnitude:0.0}", font1, brush, new Point(587, 126));
+                            g.DrawString($"M{info.Magnitude:0.0}", font20b, brush, new Point(587, 126));
                         }
                     }
 
@@ -416,14 +437,9 @@ time=20180101000000");
                 }
                 else
                 {
+                    _timer.Stop();
                     _timer.Start();
                     var eew = InformationsChecker.LatestEew;
-                    if (selectedIndex != 0)
-                    {
-                        if (eew.MaxIntensity.EnumOrder >= selectedIndex + 3)
-                            goto last;
-                        Invoke((Action)(() => { keepSetting.SelectedIndex = 0; }));
-                    }
 
                     infotype = eew.IsWarn ? "警報" : "予報";
                     Console.WriteLine($@"緊急地震速報(第{eew.Number}報) {eew.Epicenter} " +
@@ -463,6 +479,8 @@ time=20180101000000");
                                 .OrderByDescending(x => x.Value)
                                 .Distinct(new IntensityEqualComparer()).GroupBy(x => x.Item2)
                                 .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"));
+
+                    Bitmap bmp;
                     //地図描画
                     if (eew.Coordinate.Latitude == _latitude &&
                         eew.Coordinate.Longitude == _longitude &&
@@ -470,14 +488,17 @@ time=20180101000000");
                         eew.Magnitude == _magnitude &&
                         eew.MaxIntensity.Equals(_lastIntensity) &&
                         eew.IsWarn == _isWarn &&
-                        eew.OccurrenceTime == _lastTime) {
-                        pic = null;
-                        goto last;
-                    }
-                    using (var bmp = await Task.Run(() => Map.EewMap.Draw(checkBox2.Checked)))
+                        eew.OccurrenceTime == _lastTime)
                     {
-                        g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                        bmp = _lastBitmap;
                     }
+                    else
+                    {
+                        bmp = await Task.Run(() => EewMap.Draw(checkBox2.Checked));
+                        _lastBitmap = bmp;
+                    }
+
+                    g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
 
                     _latitude = eew.Coordinate.Latitude;
                     _longitude = eew.Coordinate.Longitude;
@@ -487,21 +508,74 @@ time=20180101000000");
                     _lastIntensity = eew.MaxIntensity;
                     _lastTime = eew.OccurrenceTime;
                     //文字描画
+                    // var roboto14 = new Font("Roboto", 14, FontStyle.Regular);
+                    var colors = new Dictionary<int, Color>
+                    {
+                        {1, Color.FromArgb(70, 100, 110)},
+                        {2, Color.FromArgb(30, 110, 230)},
+                        {3, Color.FromArgb(0, 200, 200)},
+                        {4, Color.FromArgb(250, 250, 100)},
+                        {5, Color.FromArgb(255, 180, 0)},
+                        {6, Color.FromArgb(255, 120, 0)},
+                        {7, Color.FromArgb(230, 0, 0)},
+                        {8, Color.FromArgb(160, 0, 0)},
+                        {9, Color.FromArgb(150, 0, 150)},
+                    };
+                    if (!colors.TryGetValue(eew.MaxIntensity.EnumOrder, out var color)) color = Color.White;
+                    const TextFormatFlags flag = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+                    var textColor = eew.MaxIntensity.Equals(Intensity.Int3) ||
+                                    eew.MaxIntensity.Equals(Intensity.Int4) ||
+                                    eew.MaxIntensity.Equals(Intensity.Int5Minus) ||
+                                    eew.MaxIntensity.Equals(Intensity.Unknown)
+                        ? Color.Black
+                        : Color.White;
+
                     g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 260, 120);
-                    g.DrawString($"最大震度 {max}", font1, brush, new Rectangle(10, 12, 230, 39), format);
-                    g.DrawString("　震源地　", font2, brush, new Point(15, 44));
-                    g.DrawString(eew.Epicenter, font2, brush, new Point(102, 44));
-                    g.DrawString("震源の深さ", font2, brush, new Point(15, 64));
-                    g.DrawString($"{eew.Depth}km", font2, brush, new Point(102, 64));
-                    g.DrawString("地震の規模", font2, brush, new Point(15, 84));
-                    g.DrawString($"M{eew.Magnitude:0.0}", font2, brush, new Point(102, 84));
-                    g.DrawString("発生時刻", font2, brush, new Point(25, 104));
-                    g.DrawString($"{eew.OccurrenceTime:HH:mm:ss}", font2, brush, new Point(102, 104));
-                    Console.WriteLine("String drawed");
+                    g.FillRectangle(new SolidBrush(color), 8, 26, 147, 55);
+                    var sfCC = new StringFormat
+                        { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    var sfCF = new StringFormat
+                        {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far};
+                    var last = eew.IsLast ? "（最終）" : "";
+                    var warn = eew.IsWarn ? " 警報" : "";
+                    TextRenderer.DrawText(g, $"第{eew.Number}報{last}{warn}", font9, new Point(8, 10), Color.White);
+                    var s = eew.MaxIntensity.ShortString.Replace("-", "").Replace("+", "");
+                    g.DrawString("最大震度", font14, new SolidBrush(textColor), 8, 55);
+                    if (eew.MaxIntensity.Equals(Intensity.Unknown))
+                    {
+                        g.DrawString("不明", font20, Brushes.Black, new Point(88, 37));
+                    }
+                    else if (eew.MaxIntensity.ShortString.Length == 2)
+                    {
+                        //g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.White)),82, 30, 35, 53);
+                        g.DrawString(s, robotoI, new SolidBrush(textColor),
+                            new Rectangle(87, 30, 35, 53),
+                            sfCC);
+                        var pmChar = eew.MaxIntensity.LongString.Last().ToString();
+                        g.DrawString(pmChar, font20b, new SolidBrush(textColor),
+                            new Rectangle(112, 32, 45, 53), sfCF);
+                    }
+                    else
+                    {
+                        g.DrawString(s, robotoI, new SolidBrush(textColor),
+                            new Rectangle(82, 30, 80, 53),
+                            sfCC);
+                    }
+
+                    TextRenderer.DrawText(g, "M", font20, new Point(153, 46), Color.White);
+                    TextRenderer.DrawText(g, $"{eew.Magnitude:0.0}", font40, new Point(174, 17), Color.White);
+                    TextRenderer.DrawText(g, $"{eew.OccurrenceTime:HH:mm:ss}発生", font9, new Rectangle(8, 10, 260, 15),
+                        Color.White, TextFormatFlags.Right);
+                    TextRenderer.DrawText(g, "震源地", font10, new Point(9, 85), Color.White);
+                    TextRenderer.DrawText(g, eew.Epicenter,
+                        eew.Epicenter.Length < 8 ? font16 : font12,
+                        new Rectangle(9, 100, 170, 27), Color.White, TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, "深さ", font10, new Point(182, 85), Color.White);
+                    TextRenderer.DrawText(g, $"{eew.Depth}km", font16, new Point(180, 99), Color.White);
                 }
 
-                font1.Dispose();
-                font2.Dispose();
+                new List<Font> {font9, font10, font14, font16, font20, font40, font19b, font20b, roboto}.ForEach(x =>
+                    x.Dispose());
             }
             catch (Exception e)
             {

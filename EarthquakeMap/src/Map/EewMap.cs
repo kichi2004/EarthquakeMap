@@ -3,11 +3,16 @@ QuakeMapCS
 Copyright (c) 2018 Oruponu
 Released under the MIT License.
 */
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Linq;
 using System.Threading.Tasks;
-using EarthquakeMap.Enums;
+using EarthquakeLibrary;
 using static System.Math;
 
 namespace EarthquakeMap.Map
@@ -23,25 +28,23 @@ namespace EarthquakeMap.Map
         private const double LonMin = 121.93;
         private const double LonMax = 149.75;
         private const string ImagePath = @"materials\Jishin\";
-
-        private static readonly string[] IntList = { "7", "6強", "6弱", "5強", "5弱", "4", "3", "2", "1" };
         public static async Task<Bitmap> Draw(bool filter = true)
         {
             return await Task.Run(() => {
+                var sw = Stopwatch.StartNew();
                 var eew = InformationsChecker.LatestEew;
-                (float lat, float lon) = (0, 0);
                 var latlon = ToPixelCoordinate((
                     eew.Coordinate.Latitude,
                     eew.Coordinate.Longitude
                 ));
-                lat = latlon[0];
-                lon = latlon[1];
+                var (lat, lon) = (latlon[0], latlon[1]);
                 var estshindo = eew.EstShindo;
                 var pointSorted = estshindo.Where(x => x != null && x.AnalysisResult > 0.4)
                     .OrderBy(x => x.AnalysisResult)
-                    .ToDictionary(x => x.Location, x => Intensity.FromValue(x.AnalysisResult ?? 0f).LongString.Replace("震度", ""));
+                    .ToDictionary(x => x.Location, x => Intensity.FromValue(x.AnalysisResult ?? 0f));
 
-                var pointPixel = pointSorted.ToDictionary(x => ToPixelCoordinate((x.Key.Latitude, x.Key.Longitude)), x => x.Value);
+                var pointPixel = pointSorted.ToDictionary(x => ToPixelCoordinate((x.Key.Latitude, x.Key.Longitude)),
+                    x => x.Value);
 
                 int cutWidth = 1440, cutHeight = 810;
 
@@ -55,8 +58,8 @@ namespace EarthquakeMap.Map
                 var centerY = (yMin + yMax) / 2;
 
                 // 地図を縮小
-                var areaIntSize = 36f;
-                var cityIntSize = 24f;
+                const float areaIntSize = 40f;
+                var cityIntSize = 32f;
                 var zoomRate = 1f;
                 var diffWidth = xMax - xMin;
                 var diffHeight = yMax - yMin;
@@ -70,19 +73,10 @@ namespace EarthquakeMap.Map
                     cutWidth = (int)Ceiling(diffWidth + areaIntSize * zoomRate * 2);
                     cutHeight = cutWidth * 9 / 16;
                 }
-                var epiSize = 80f;
+                var epiSize = 80f / 2;
                 epiSize = (int)Ceiling(epiSize * zoomRate);
-                //areaIntSize = (int)Ceiling(areaIntSize * zoomRate);
                 cityIntSize = (int)Ceiling(cityIntSize * zoomRate);
 
-                // 画像読み込み
-                //var imageAreaList = new Dictionary<string, Bitmap>();
-                var imageCityList = new Dictionary<string, Bitmap>();
-                foreach (var intensity in IntList) {
-                    //imageAreaList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
-                    imageCityList.Add(intensity, new Bitmap(Image.FromFile(ImagePath + "Station\\" + intensity + ".png")));
-                }
-                // 地図の範囲外であった場合、拡張する
                 var orgX = (int)Ceiling(centerX) - cutWidth / 2;
                 var adjustX = 0;
                 if (orgX >= 0 || orgX + cutWidth <= ImageWidth) {
@@ -105,56 +99,91 @@ namespace EarthquakeMap.Map
                         orgY -= orgY + cutHeight - ImageHeight;
                     }
                 }
-                // 描画
-                //var orgAreaBitmap = new Bitmap(ImageWidth, ImageHeight);
+                var font = new Font(new FontFamily("roboto"), cityIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
+                var sf = new StringFormat
+                    { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+
+                Console.WriteLine($"Calclation completed ({sw.ElapsedMilliseconds} ms)");
                 var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
-                //var orgAreaGraphics = Graphics.FromImage(orgAreaBitmap);
                 var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
-                //orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Base.png"),
-                //    0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
+                orgCityGraphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+                orgCityGraphics.SmoothingMode = SmoothingMode.AntiAlias;
                 using (var image = Image.FromFile(ImagePath + "Base.png"))
-                    orgCityGraphics.DrawImage(image,
-                        0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
-                //orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
-                //    epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
+                    orgCityGraphics.DrawImage(image, adjustX, adjustY, ImageWidth, ImageHeight);
+                Console.WriteLine($"Drawed base image ({sw.ElapsedMilliseconds} ms)");
+
                 orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
                     lat - epiSize / 2 + adjustX, lon - epiSize / 2 + adjustY, epiSize, epiSize);
-                foreach (var pixel in pointPixel) {
-                    if (imageCityList.ContainsKey(pixel.Value)) {
-                        orgCityGraphics.DrawImage(imageCityList[pixel.Value],
-                            pixel.Key[0] - cityIntSize / 2 + adjustX, pixel.Key[1] - cityIntSize / 2 + adjustY, cityIntSize, cityIntSize);
-                    }
+                foreach (var pixel in pointPixel.Where(kv => kv.Value >= Intensity.Int1))
+                {
+                    var intensity = pixel.Value;
+                    var textColor = intensity.Equals(Intensity.Int3) ||
+                                    intensity.Equals(Intensity.Int4) ||
+                                    intensity.Equals(Intensity.Int5Minus) ||
+                                    intensity.Equals(Intensity.Unknown)
+                        ? Color.Black
+                        : Color.White;
+
+                    orgCityGraphics.FillEllipse(
+                        new SolidBrush(Form1.Colors[intensity.EnumOrder]),
+                        pixel.Key[0] - cityIntSize / 2f + adjustX, 
+                        pixel.Key[1] - cityIntSize / 2f + adjustY, 
+                        cityIntSize,
+                        cityIntSize
+                    );
+                    orgCityGraphics.DrawString(
+                        intensity.ShortString.Replace('-', '‒'),
+                        font,
+                        new SolidBrush(textColor),
+                        new RectangleF(pixel.Key[0] - cityIntSize + adjustX,
+                            pixel.Key[1] - cityIntSize / 2f + adjustY + cityIntSize / 20f, cityIntSize * 2, cityIntSize),
+                        sf
+                    );
                 }
-                //orgAreaGraphics.Dispose();
                 orgCityGraphics.Dispose();
+                Console.WriteLine($"Drawed intensity icons ({sw.ElapsedMilliseconds} ms)");
 
                 // 切り取り
-                //var cutAreaBitmap = new Bitmap(cutWidth, cutHeight);
                 var cutCityBitmap = new Bitmap(cutWidth, cutHeight);
-                //var cutAreaGraphics = Graphics.FromImage(cutAreaBitmap);
                 var cutCityGraphics = Graphics.FromImage(cutCityBitmap);
-                //cutAreaGraphics.FillRectangle(new SolidBrush(Color.FromArgb(32, 32, 32)), new Rectangle(0, 0, cutWidth, cutHeight));
                 cutCityGraphics.FillRectangle(new SolidBrush(Color.FromArgb(32, 32, 32)), new Rectangle(0, 0, cutWidth, cutHeight));
-                //cutAreaGraphics.DrawImage(orgAreaBitmap, new Rectangle(0, 0, cutWidth, cutHeight), new Rectangle(orgX, orgY, cutWidth, cutHeight), GraphicsUnit.Pixel);
                 cutCityGraphics.DrawImage(orgCityBitmap, new Rectangle(0, 0, cutWidth, cutHeight), new Rectangle(orgX, orgY, cutWidth, cutHeight), GraphicsUnit.Pixel);
-                //orgAreaBitmap.Dispose();
                 orgCityBitmap.Dispose();
-                //cutAreaGraphics.Dispose();
                 cutCityGraphics.Dispose();
+                Console.WriteLine($"Cut ({sw.ElapsedMilliseconds} ms)");
 
                 // 保存
-                //var saveAreaBitmap = new Bitmap(cutAreaBitmap, SaveWidth, SaveHeight);
                 var saveCityBitmap = new Bitmap(cutCityBitmap, SaveWidth, SaveHeight);
-                //var saveAreaGraphics = Graphics.FromImage(saveAreaBitmap);
-                var saveCityGraphics = Graphics.FromImage(saveCityBitmap);
-                //saveAreaGraphics.Dispose();
-                saveCityGraphics.Dispose();
 
+                Console.WriteLine($"EEW Drawing Complete: {sw.ElapsedMilliseconds} ms");
                 return saveCityBitmap;
             });
         }
 
 
+        private static Dictionary<float[], Intensity> FilterDrawIntensity(Dictionary<float[], Intensity> intList)
+        {
+            var dictionary = new Dictionary<float[], Intensity>();
+            switch (InformationsChecker.LatestEew.MaxIntensity.ShortString)
+            {
+                case "1":
+                case "2":
+                case "3":
+                case "4":
+                    dictionary = intList;
+                    break;
+                case "5-":
+                case "5+":
+                    dictionary = intList.Where(x => x.Value >= Intensity.Int2).ToDictionary(x => x.Key, x => x.Value);
+                    break;
+                case "6-":
+                case "6+":
+                case "7":
+                    dictionary = intList.Where(x => x.Value >= Intensity.Int3).ToDictionary(x => x.Key, x => x.Value);
+                    break;
+            }
+            return dictionary;
+        }
 
         private static Dictionary<float[], string> FilterDrawIntensity(Dictionary<float[], string> intList)
         {
@@ -189,10 +218,11 @@ namespace EarthquakeMap.Map
                 .FirstOrDefault();
         }
 
-        private static float[] ToPixelCoordinate((float lat, float lon) latLon)
+        private static float[] ToPixelCoordinate((float, float) latLon)
         {
-            var x = (latLon.lon - LonMin) * ImageWidth / (LonMax - LonMin);
-            var y = ImageHeight - (latLon.lat - LatMin) * ImageHeight / (LatMax - LatMin);
+            var (lat, lon) = latLon;
+            var x = (lon - LonMin) * ImageWidth / (LonMax - LonMin);
+            var y = ImageHeight - (lat - LatMin) * ImageHeight / (LatMax - LatMin);
 
             return new[] { (float)x, (float)y };
         }
