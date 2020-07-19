@@ -177,12 +177,16 @@ namespace EarthquakeMap.Map
                     var saveCityGraphics = Graphics.FromImage(saveCityBitmap);
                     saveCityGraphics.Dispose();
                     return saveCityBitmap;
-                } else {
+                } else
+                {
                     var areaIntBase = info.Shindo
-                        .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new {
-                            Place = info.InformationType == InformationType.EarthquakeInfo ? Form1.CityToArea[z] : z,
+                        .SelectMany(x => x.Place.SelectMany(y => y.Place.Select(z => new
+                        {
+                            Place = info.InformationType == InformationType.EarthquakeInfo
+                                ? Form1.CityToArea.ContainsKey(z) ? Form1.CityToArea[z] : null
+                                : z,
                             x.Intensity
-                        })));
+                        }).Where(x => x.Place != null)));
                     var areaInt = new Dictionary<string, Intensity>();
                     foreach (var ai in areaIntBase.Where(x => !areaInt.ContainsKey(x.Place))) areaInt.Add(ai.Place, ai.Intensity);
                     
@@ -283,6 +287,7 @@ namespace EarthquakeMap.Map
                     foreach (var pixel in areaPixel)
                     {
                         var intensity = pixel.Value;
+                        if (intensity == null) continue;
                         var textColor = intensity.Equals(Intensity.Int3) ||
                                         intensity.Equals(Intensity.Int4) ||
                                         intensity.Equals(Intensity.Int5Minus) ||
