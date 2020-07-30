@@ -242,9 +242,6 @@ namespace EarthquakeMap.Map
                     epiSize = (int)Ceiling(epiSize * zoomRate);
                     areaIntSize = (int)Ceiling(areaIntSize * zoomRate);
 
-                    // 画像読み込み
-                    var imageAreaList = IntList.Reverse().ToDictionary(intensity => intensity, intensity => new Bitmap(Image.FromFile(ImagePath + "Area\\" + intensity + ".png")));
-
                     // 地図の範囲外であった場合、拡張する
                     var orgX = (int)Ceiling(centerX) - cutWidth / 2;
                     var adjustX = 0;

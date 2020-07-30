@@ -206,12 +206,19 @@ time=20180101000000");
 
         private async void TimerElapsed()
         {
-            if (_now.Minute % 10 == 0 &&
+            if (_now.Minute == 0 &&
                 _now.Second == 0 && _now.Millisecond <= 100)
             {
                 if((_now.Hour == 6 || _now.Hour == 18) && _now.Minute == 0)
                     _checker.Check();
-                await SetTime();
+                try
+                {
+                    await SetTime();
+                }
+                catch
+                {
+                    //
+                }
             }
             else
                 _now = _now.AddSeconds(0.1);
