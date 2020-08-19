@@ -42,7 +42,7 @@ namespace EarthquakeMap
         };
 
         private DateTime _now, _time;
-        private FontFamily _koruriFont;
+        private FontFamily _koruriFont, _robotoFont;
         private Bitmap _mainBitmap, _lastBitmap;
         private bool _isFirst = true;
         private bool _isTest;
@@ -71,9 +71,15 @@ namespace EarthquakeMap
 
         private async void Initialize()
         {
-            var pfc = new PrivateFontCollection();
-            pfc.AddFontFile("Koruri-Regular.ttf");
-            _koruriFont = pfc.Families[0];
+            var koruriPfc = new PrivateFontCollection();
+            koruriPfc.AddFontFile("fonts\\Koruri-Regular.ttf");
+            _koruriFont = koruriPfc.Families[0];
+            
+            var robotoPfc = new PrivateFontCollection();
+            foreach (var file in Directory.EnumerateFiles("fonts").Where(x => x.Contains("Roboto")))
+                robotoPfc.AddFontFile(file);
+            _robotoFont = robotoPfc.Families[0];
+
             ObservationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
 
@@ -287,8 +293,8 @@ time=20180101000000");
                 var font23 = new Font(_koruriFont, 23);
                 var font19b = new Font(_koruriFont, 19, FontStyle.Bold);
                 var font20b = new Font(_koruriFont, 20, FontStyle.Bold);
-                var roboto = new Font("roboto", 40);
-                var robotoI = new Font("roboto", 40, FontStyle.Italic);
+                var roboto = new Font(_robotoFont, 40);
+                var robotoI = new Font(_robotoFont, 40, FontStyle.Italic);
                 pic = new Bitmap(773, 435);
                 var g = Graphics.FromImage(pic);
                 g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
