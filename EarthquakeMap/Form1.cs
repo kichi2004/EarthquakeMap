@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using EarthquakeLibrary;
@@ -577,46 +578,14 @@ time=20180101000000");
                 //失敗してもとりあえず何もしない
             }
         }
-        /*
-        private void SwapImage(Image newImage)
-        {
-            if (this.mainPicbox == null)
-                throw new ArgumentNullException(nameof(this.mainPicbox));
-            var oldImg = this.mainPicbox.Image;
-            this.mainPicbox.Image = newImage;
-            oldImg?.Dispose();
-        }
-
-        /// <summary>
-        /// 強震モニタの画像を取得します。
-        /// </summary>
-        /// <param name="time">取得する時刻</param>
-        /// <returns></returns>
-        private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
-        {
-            time = time.AddSeconds(-1);
-            //強震モニタ画像取得
-            string kmoniUrl =
-                $"http://www.kmoni.bosai.go.jp/data/map_img/RealTimeImg/" +
-                $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
-            Bitmap res = null;
-            try {
-                res = await DownloadImageAsync(kmoniUrl);
-            } catch {
-                res = null;
-            }
-            return res;
-        }
-        */
 
         /// <summary>
         /// 時刻を合わせます。
         /// </summary>
         private async Task SetTime()
         {
-            var str =
-                (await DownloadStringAsync("http://ntp-a1.nict.go.jp/cgi-bin/jst"))
-                .Split('\n')[3];
+            var source = await DownloadStringAsync("http://ntp-a4.nict.go.jp/cgi-bin/jst");
+            var str = Regex.Match(source, "([\\d.]+)").Groups[1].Value;
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();
             _now = time;
