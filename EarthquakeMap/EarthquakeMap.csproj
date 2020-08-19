@@ -84,7 +84,6 @@
   <ItemGroup>
     <Compile Include="src\Comparers.cs" />
     <Compile Include="src\DynamicJson.cs" />
-    <Compile Include="src\Enums\Intensity.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

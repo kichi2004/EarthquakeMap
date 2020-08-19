@@ -8,13 +8,17 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using EarthquakeLibrary;
 using EarthquakeLibrary.Information;
-using EarthquakeMap.Enums;
+using EarthquakeMap.Map;
 using EarthquakeMap.Properties;
 using KyoshinMonitorLib;
 using static EarthquakeMap.Utilities;
+using Timer = System.Timers.Timer;
+
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace EarthquakeMap
@@ -24,10 +28,22 @@ namespace EarthquakeMap
         internal static ObservationPoint[] ObservationPoints;
         internal static Dictionary<string, string> CityToArea;
         internal static string Url;
+        internal static Dictionary<int, Color> Colors = new Dictionary<int, Color>
+        {
+            {1, Color.FromArgb(70, 100, 110)},
+            {2, Color.FromArgb(30, 110, 230)},
+            {3, Color.FromArgb(0, 200, 200)},
+            {4, Color.FromArgb(250, 250, 100)},
+            {5, Color.FromArgb(255, 180, 0)},
+            {6, Color.FromArgb(255, 120, 0)},
+            {7, Color.FromArgb(230, 0, 0)},
+            {8, Color.FromArgb(160, 0, 0)},
+            {9, Color.FromArgb(150, 0, 150)},
+        };
 
         private DateTime _now, _time;
         private FontFamily _koruriFont;
-        private Bitmap _mainBitmap;
+        private Bitmap _mainBitmap, _lastBitmap;
         private bool _isFirst = true;
         private bool _isTest;
         private float _latitude;
@@ -49,7 +65,6 @@ namespace EarthquakeMap
         public Form1()
         {
             InitializeComponent();
-            // ReSharper disable once AssignmentIsFullyDiscarded
             _ = Handle;
             Initialize();
         }
@@ -90,9 +105,9 @@ namespace EarthquakeMap
 
             //設定保存
             FormClosing += SaveSettings;
-            _timer.Tick += (s, e) => _forceInfo = true;
+            _timer.Elapsed += (s, e) => _forceInfo = true;
 
-            var timer = new FixedTimer()
+            var timer = new FixedTimer
             {
                 Interval = TimeSpan.FromMilliseconds(100)
             };
@@ -156,7 +171,7 @@ time=20180101000000");
             catch
             {
                 MessageBox.Show(@"時刻合わせに失敗しました。");
-                var timer2 = new System.Timers.Timer(60000);
+                var timer2 = new Timer(60000);
                 timer2.Elapsed += async (s, e) => {
                     try
                     {
@@ -192,12 +207,19 @@ time=20180101000000");
 
         private async void TimerElapsed()
         {
-            if (_now.Minute % 10 == 0 &&
+            if (_now.Minute == 0 &&
                 _now.Second == 0 && _now.Millisecond <= 100)
             {
                 if((_now.Hour == 6 || _now.Hour == 18) && _now.Minute == 0)
                     _checker.Check();
-                await SetTime();
+                try
+                {
+                    await SetTime();
+                }
+                catch
+                {
+                    //
+                }
             }
             else
                 _now = _now.AddSeconds(0.1);
@@ -241,32 +263,46 @@ time=20180101000000");
             }
 
             if (!infoflag && !eewflag) goto last;
-            if (_timer.Enabled) _timer.Stop();
+            var selectedIndex = -1;
+            Invoke((Action)(() => { selectedIndex = keepSetting.SelectedIndex; }));
+            if (selectedIndex != 0)
+            {
+                var intensity = infoflag
+                    ? InformationsChecker.LatestInformation.MaxIntensity
+                    : InformationsChecker.LatestEew.MaxIntensity;
+                if (intensity.EnumOrder < selectedIndex + 2)
+                    goto last;
+            }
             try
             {
-                var font1 = new Font(_koruriFont, 20f, FontStyle.Bold);
-                var font2 = new Font(_koruriFont, 12f);
-                var font3 = new Font(_koruriFont, 19f, FontStyle.Bold);
+                var font9 = new Font(_koruriFont, 9);
+                var font10 = new Font(_koruriFont, 10);
+                var font11 = new Font(_koruriFont, 11);
+                var font12 = new Font(_koruriFont, 12);
+                var font13 = new Font(_koruriFont, 13);
+                var font14 = new Font(_koruriFont, 14);
+                var font16 = new Font(_koruriFont, 16);
+                var font40 = new Font(_koruriFont, 40);
+                var font20 = new Font(_koruriFont, 20);
+                var font23 = new Font(_koruriFont, 23);
+                var font19b = new Font(_koruriFont, 19, FontStyle.Bold);
+                var font20b = new Font(_koruriFont, 20, FontStyle.Bold);
+                var roboto = new Font("roboto", 40);
+                var robotoI = new Font("roboto", 40, FontStyle.Italic);
                 pic = new Bitmap(773, 435);
                 var g = Graphics.FromImage(pic);
                 g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                var format = new StringFormat
-                {
-                    Alignment = StringAlignment.Center
-                };
-                var brush = Brushes.White;
-                var selectedIndex = -1;
-                Invoke((Action)(() => { selectedIndex = keepSetting.SelectedIndex; }));
+                var sfCC = new StringFormat
+                    { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                var sfCF = new StringFormat
+                    { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Far };
+                const int left = 8, top = 50;
+                var secondary = Color.FromArgb(191, 191, 191);
                 if (infoflag)
                 {
                     var info = InformationsChecker.LatestInformation;
-                    if (selectedIndex != 0)
-                    {
-                        if ((int)info.MaxIntensity >= selectedIndex + 3)
-                            goto last;
-                        Invoke((Action)(() => { keepSetting.SelectedIndex = 0; }));
-                    }
+                    if (_timer.Enabled) _timer.Stop();
 
                     switch (info.InformationType)
                     {
@@ -284,126 +320,89 @@ time=20180101000000");
                     }
 
                     //地図描画
-                    using (var bmp = await Task.Run(() => Map.QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
+                    using (var bmp = await Task.Run(() => QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
                         if (bmp != null)
                             g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
-                    var isDetail = info.InformationType != InformationType.SesimicInfo;
-                    //文字描画
-                    g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 5,
-                        190, 40);
-                    g.DrawString($"{info.OriginTime:H時mm分}ごろ", font3, brush, 12, 7);
 
-                    if (isDetail)
+                    if (info.InformationType == InformationType.SesimicInfo)
                     {
-                        var dictepi = new Dictionary<string, string> {
-                            {"留萌地方中北部", "留萌地方\r\n中北部"},
-                            {"胆振地方中東部", "胆振地方\r\n中東部"},
-                            {"釧路地方中南部", "釧路地方\r\n中南部"},
-                            {"根室半島南東沖", "根室半島\r\n南東沖"},
-                            {"青森県津軽北部", "青森県\r\n津軽北部"},
-                            {"青森県津軽南部", "青森県\r\n津軽南部"},
-                            {"青森県三八上北地方", "青森県\r\n三八上北地方"},
-                            {"青森県下北地方", "青森県\r\n下北地方"},
-                            {"岩手県沿岸北部", "岩手県\r\n沿岸北部"},
-                            {"岩手県沿岸南部", "岩手県\r\n沿岸南部"},
-                            {"岩手県内陸北部", "岩手県\r\n内陸北部"},
-                            {"岩手県内陸南部", "岩手県\r\n内陸南部"},
-                            {"秋田県沿岸北部", "秋田県\r\n沿岸北部"},
-                            {"秋田県沿岸南部", "秋田県\r\n沿岸南部"},
-                            {"秋田県内陸北部", "秋田県\r\n内陸北部"},
-                            {"秋田県内陸南部", "秋田県\r\n内陸南部"},
-                            {"山形県庄内地方", "山形県\r\n庄内地方"},
-                            {"山形県最上地方", "山形県\r\n最上地方"},
-                            {"山形県村山地方", "山形県\r\n村山地方"},
-                            {"山形県置賜地方", "山形県\r\n置賜地方"},
-                            {"埼玉県秩父地方", "埼玉県\r\n秩父地方"},
-                            {"房総半島南方沖", "房総半島\r\n南方沖"},
-                            {"東京都多摩東部", "東京都\r\n多摩東部"},
-                            {"東京都多摩西部", "東京都\r\n多摩西部"},
-                            {"新潟県上越地方", "新潟県\r\n上越地方"},
-                            {"新潟県中越地方", "新潟県\r\n中越地方"},
-                            {"新潟県下越地方", "新潟県\r\n下越地方"},
-                            {"新潟県上中越沖", "新潟県\r\n上中越沖"},
-                            {"石川県能登地方", "石川県\r\n能登地方"},
-                            {"石川県加賀地方", "石川県\r\n加賀地方"},
-                            {"山梨県中・西部", "山梨県\r\n中・西部"},
-                            {"山梨県東部・富士五湖", "山梨県東部・\r\n富士五湖"},
-                            {"岐阜県飛騨地方", "岐阜県\r\n飛騨地方"},
-                            {"岐阜県美濃東部", "岐阜県\r\n美濃東部"},
-                            {"岐阜県美濃中西部", "岐阜県\r\n美濃中西部"},
-                            {"静岡県伊豆地方", "静岡県\r\n伊豆地方"},
-                            {"伊豆半島東方沖", "伊豆半島\r\n東方沖"},
-                            {"新島・神津島近海", "新島・神津島\r\n近海"},
-                            {"和歌山県南方沖", "和歌山県\r\n南方沖"},
-                            {"福岡県福岡地方", "福岡県\r\n福岡地方"},
-                            {"福岡県北九州地方", "福岡県\r\n北九州地方"},
-                            {"福岡県筑豊地方", "福岡県\r\n筑豊地方"},
-                            {"福岡県筑後地方", "福岡県\r\n筑後地方"},
-                            {"長崎県島原半島", "長崎県\r\n島原半島"},
-                            {"熊本県阿蘇地方", "熊本県\r\n阿蘇地方"},
-                            {"熊本県熊本地方", "熊本県\r\n熊本地方"},
-                            {"熊本県球磨地方", "熊本県\r\n球磨地方"},
-                            {"熊本県天草・芦北地方", "熊本県天草・\r\n芦北地方"},
-                            {"宮崎県北部平野部", "宮崎県\r\n北部平野部"},
-                            {"宮崎県北部山沿い", "宮崎県\r\n北部山沿い"},
-                            {"宮崎県南部平野部", "宮崎県\r\n南部平野部"},
-                            {"宮崎県南部山沿い", "宮崎県\r\n南部山沿い"},
-                            {"鹿児島県薩摩地方", "鹿児島県\r\n薩摩地方"},
-                            {"鹿児島県大隅地方", "鹿児島県\r\n大隅地方"},
-                            {"壱岐・対馬近海", "壱岐・対馬\r\n近海"},
-                            {"薩摩半島西方沖", "薩摩半島\r\n西方沖"},
-                            {"トカラ列島近海", "トカラ列島\r\n近海"},
-                            {"奄美大島北西沖", "奄美大島\r\n北西沖"},
-                            {"大隅半島東方沖", "大隅半島\r\n東方沖"},
-                            {"九州地方南東沖", "九州地方\r\n南東沖"},
-                            {"奄美大島北東沖", "奄美大島\r\n北東沖"},
-                            {"沖縄本島南方沖", "沖縄本島\r\n南方沖"},
-                            {"沖縄本島北西沖", "沖縄本島\r\n北西沖"},
-                            {"オホーツク海南部", "オホーツク海\r\n南部"},
-                            {"サハリン西方沖", "サハリン\r\n西方沖"},
-                            {"千島列島南東沖", "千島列島\r\n南東沖"},
-                            {"東北地方東方沖", "東北地方\r\n東方沖"},
-                            {"小笠原諸島西方沖", "小笠原諸島\r\n西方沖"},
-                            {"小笠原諸島東方沖", "小笠原諸島\r\n東方沖"},
-                            {"薩南諸島東方沖", "薩南諸島\r\n東方沖"},
-                            {"サハリン南部付近", "サハリン南部\r\n付近"}
-                        };
-                        string epi = null;
-                        if (info.Epicenter.Length <= 6 || dictepi.TryGetValue(info.Epicenter, out epi))
+                        g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), left, 10, 140, 65);
+                        TextRenderer.DrawText(g, "震度速報",font23, new Rectangle(left, 10, 140, 40), Color.White);
+                        TextRenderer.DrawText(g, $"{info.OriginTime:HH時mm分頃発生}", font12, new Rectangle(left, 50, 140, 20), Color.White);
+                    }
+                    else
+                    {
+                        g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), left, 10, 360, 102);
+                        TextRenderer.DrawText(g, $"{info.OriginTime:d日H時mm分}頃発生", font9, new Point(left, 65), Color.White);
+                        TextRenderer.DrawText(g, "震源地", font10, new Point(left + 150, 10), secondary);
+                        TextRenderer.DrawText(g, info.Epicenter,
+                            info.Epicenter.Length < 8 ? font16 : font14,
+                            new Rectangle(left + 160, 25, 200, 27), Color.White, TextFormatFlags.VerticalCenter);
+                        TextRenderer.DrawText(g, "深さ", font10, new Point(left + 150, 61), secondary);
+                        var depth = info.Depth == null ? "----" : info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い";
+                        TextRenderer.DrawText(g, depth, font14, new Point(left + 180, 55), Color.White);
+                        TextRenderer.DrawText(g, "規模", font10, new Point(left + 270, 61), secondary);
+                        TextRenderer.DrawText(g, "M", font11, new Point(left + 301, 60), Color.White);
+                        TextRenderer.DrawText(g, info.Magnitude == null ? "---" : $"{info.Magnitude:0.0}", font16,
+                            new Point(left + 317, 52), Color.White);
+                        var tsunamiMessage = "";
+                        var tsunamiColor = Color.Yellow;
+                        var tsunamiFont = font16;
+
+                        if ((info.Message & MessageType.NoTsunami) != 0)
                         {
-                            var b = epi == null;
-                            if (b) epi = info.Epicenter;
-                            g.DrawImage(Image.FromFile(@"materials\Jishin\" + (b ? "Summary1.png" : "Summary2.png")),
-                                new Point(495, 5));
-                            g.DrawString(epi, new Font(_koruriFont, 20f), brush, new Point(587, 12));
-                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
-                                b ? new Point(587, 52) : new Point(587, 85));
-                            g.DrawString($"M{info.Magnitude:0.0}", font1, brush,
-                                b ? new Point(587, 94) : new Point(587, 126));
+                            tsunamiColor = Color.White;
+                            tsunamiMessage = "津波の心配なし";
                         }
-                        else
+                        else if ((info.Message & MessageType.SeaLevelChange) != 0)
                         {
-                            Point epicenterPoint;
-                            Font epicenterFont;
-                            if (info.Epicenter.Length == 10)
+                            tsunamiMessage = "若干の海面変動 被害の心配なし";
+                        }
+                        else if ((info.Message & MessageType.TsunamiInformation) != 0)
+                        {
+                            tsunamiFont = font13;
+                            tsunamiMessage = "津波に関する情報（津波警報等）を発表中";
+                        }
+
+                        TextRenderer.DrawText(g, tsunamiMessage, tsunamiFont, new Rectangle(left, 78, 360, 32),
+                            tsunamiColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Right);
+
+                        if (info.InformationType == InformationType.EarthquakeInfo)
+                        {
+                            var color = Colors[info.MaxIntensity.EnumOrder];
+                            var textColor = info.MaxIntensity.Equals(Intensity.Int3) ||
+                                            info.MaxIntensity.Equals(Intensity.Int4) ||
+                                            info.MaxIntensity.Equals(Intensity.Int5Minus) ||
+                                            info.MaxIntensity.Equals(Intensity.Unknown)
+                                ? Color.Black
+                                : Color.White;
+                            g.FillRectangle(new SolidBrush(color), left, 10, 147, 55);
+                            var s = info.MaxIntensity.ShortString[0].ToString();
+                            g.DrawString("最大震度", font14, new SolidBrush(textColor), left, 39);
+                            if (info.MaxIntensity.Equals(Intensity.Unknown))
                             {
-                                epicenterFont = new Font(_koruriFont, 18f);
-                                epicenterPoint = new Point(506, 49);
+                                g.DrawString("不明", font20, Brushes.Black, new Point(left + 80, top + 27));
+                            }
+                            else if (info.MaxIntensity.ShortString.Length == 2)
+                            {
+                                g.DrawString(s, robotoI, new SolidBrush(textColor),
+                                    new Rectangle(left + 79, 16, 35, 53), sfCC);
+                                var pmChar = info.MaxIntensity.LongString.Last().ToString();
+                                g.DrawString(pmChar, font20b, new SolidBrush(textColor),
+                                    new Rectangle(left + 104, 16, 45, 53), sfCF);
                             }
                             else
                             {
-                                epicenterFont = new Font(_koruriFont, 20f);
-                                epicenterPoint = new Point(506, 47);
+                                g.DrawString(s, robotoI, new SolidBrush(textColor),
+                                    new Rectangle(left + 74, 16, 80, 53), sfCC);
                             }
-
-                            g.DrawImage(Image.FromFile(@"materials\Jishin\Summary2.png"), new Point(495, 5));
-                            g.DrawString(info.Epicenter, epicenterFont, brush, epicenterPoint);
-                            g.DrawString(info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い", font1, brush,
-                                new Point(587, 85));
-                            g.DrawString($"M{info.Magnitude:0.0}", font1, brush, new Point(587, 126));
+                        }
+                        else
+                        {
+                            TextRenderer.DrawText(g, "震源情報", font20, new Rectangle(left + 203, 10, 147, 55),
+                                Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
                         }
                     }
-
                     var sindDetail = new StringBuilder();
                     foreach (var sind1 in info.Shindo)
                     {
@@ -416,20 +415,13 @@ time=20180101000000");
                 }
                 else
                 {
+                    _timer.Stop();
                     _timer.Start();
                     var eew = InformationsChecker.LatestEew;
-                    if (selectedIndex != 0)
-                    {
-                        if (eew.MaxIntensity.EnumOrder >= selectedIndex + 3)
-                            goto last;
-                        Invoke((Action)(() => { keepSetting.SelectedIndex = 0; }));
-                    }
 
                     infotype = eew.IsWarn ? "警報" : "予報";
                     Console.WriteLine($@"緊急地震速報(第{eew.Number}報) {eew.Epicenter} " +
                                       $@"{eew.Depth}km M{eew.Magnitude} {eew.MaxIntensity.LongString}");
-                    var max = eew.MaxIntensity.LongString.Replace("震度", "").Replace("1", "１").Replace("2", "２")
-                        .Replace("3", "３").Replace("4", "４").Replace("5", "５").Replace("6", "６").Replace("7", "７");
                     //EEW予測震度画像を取得・解析
                     var estShindo = eew.EstShindo.ToArray();
                     var mypResult = "";
@@ -463,6 +455,8 @@ time=20180101000000");
                                 .OrderByDescending(x => x.Value)
                                 .Distinct(new IntensityEqualComparer()).GroupBy(x => x.Item2)
                                 .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"));
+
+                    Bitmap bmp;
                     //地図描画
                     if (eew.Coordinate.Latitude == _latitude &&
                         eew.Coordinate.Longitude == _longitude &&
@@ -470,14 +464,17 @@ time=20180101000000");
                         eew.Magnitude == _magnitude &&
                         eew.MaxIntensity.Equals(_lastIntensity) &&
                         eew.IsWarn == _isWarn &&
-                        eew.OccurrenceTime == _lastTime) {
-                        pic = null;
-                        goto last;
-                    }
-                    using (var bmp = await Task.Run(() => Map.EewMap.Draw(checkBox2.Checked)))
+                        eew.OccurrenceTime == _lastTime)
                     {
-                        g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                        bmp = _lastBitmap;
                     }
+                    else
+                    {
+                        bmp = await Task.Run(() => EewMap.Draw(checkBox2.Checked));
+                        _lastBitmap = bmp;
+                    }
+
+                    g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
 
                     _latitude = eew.Coordinate.Latitude;
                     _longitude = eew.Coordinate.Longitude;
@@ -486,22 +483,54 @@ time=20180101000000");
                     _isWarn = eew.IsWarn;
                     _lastIntensity = eew.MaxIntensity;
                     _lastTime = eew.OccurrenceTime;
-                    //文字描画
-                    g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), 8, 10, 260, 120);
-                    g.DrawString($"最大震度 {max}", font1, brush, new Rectangle(10, 12, 230, 39), format);
-                    g.DrawString("　震源地　", font2, brush, new Point(15, 44));
-                    g.DrawString(eew.Epicenter, font2, brush, new Point(102, 44));
-                    g.DrawString("震源の深さ", font2, brush, new Point(15, 64));
-                    g.DrawString($"{eew.Depth}km", font2, brush, new Point(102, 64));
-                    g.DrawString("地震の規模", font2, brush, new Point(15, 84));
-                    g.DrawString($"M{eew.Magnitude:0.0}", font2, brush, new Point(102, 84));
-                    g.DrawString("発生時刻", font2, brush, new Point(25, 104));
-                    g.DrawString($"{eew.OccurrenceTime:HH:mm:ss}", font2, brush, new Point(102, 104));
-                    Console.WriteLine("String drawed");
+                    if (!Colors.TryGetValue(eew.MaxIntensity.EnumOrder, out var color)) color = Color.White;
+                    var textColor = eew.MaxIntensity.Equals(Intensity.Int3) ||
+                                    eew.MaxIntensity.Equals(Intensity.Int4) ||
+                                    eew.MaxIntensity.Equals(Intensity.Int5Minus) ||
+                                    eew.MaxIntensity.Equals(Intensity.Unknown)
+                        ? Color.Black
+                        : Color.White;
+                    var pointTopLeft = new Point(left, top);
+                    g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), left, 10, 260, 160);
+                    g.FillRectangle(new SolidBrush(color), left, top + 16, 147, 55);
+                    var last = eew.IsLast ? "(最終)" : "";
+                    TextRenderer.DrawText(g, "緊急地震速報", font23, new Rectangle(left - 4, 10, 260, 40), Color.White, TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, eew.IsWarn ? "（警報）" : "（予報）", font14, new Point(left + 180, 35), Color.White, TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, $"第{eew.Number}報{last}", font9, pointTopLeft, Color.White);
+                    var s = eew.MaxIntensity.ShortString.Replace("-", "").Replace("+", "");
+                    g.DrawString("最大震度", font14, new SolidBrush(textColor), left, top + 45);
+                    if (eew.MaxIntensity.Equals(Intensity.Unknown))
+                    {
+                        g.DrawString("不明", font20, Brushes.Black, new Point(left + 80, top + 27));
+                    }
+                    else if (eew.MaxIntensity.ShortString.Length == 2)
+                    {
+                        g.DrawString(s, robotoI, new SolidBrush(textColor),
+                            new Rectangle(left + 79, top + 20, 35, 53), sfCC);
+                        var pmChar = eew.MaxIntensity.LongString.Last().ToString();
+                        g.DrawString(pmChar, font20b, new SolidBrush(textColor),
+                            new Rectangle(left + 104, top + 22, 45, 53), sfCF);
+                    }
+                    else
+                    {
+                        g.DrawString(s, robotoI, new SolidBrush(textColor),
+                            new Rectangle(left + 74, top + 20, 80, 53), sfCC);
+                    }
+
+                    TextRenderer.DrawText(g, "M", font20, new Point(left + 145, top + 36), Color.White);
+                    TextRenderer.DrawText(g, $"{eew.Magnitude:0.0}", font40, new Point(left + 166, top + 7), Color.White);
+                    TextRenderer.DrawText(g, $"{eew.OccurrenceTime:HH:mm:ss}発生", font9, new Rectangle(left, top, 260, 15),
+                        Color.White, TextFormatFlags.Right);
+                    TextRenderer.DrawText(g, "震源地", font10, new Point(left + 1, top + 75), secondary);
+                    TextRenderer.DrawText(g, eew.Epicenter,
+                        eew.Epicenter.Length < 8 ? font16 : font12,
+                        new Rectangle(left + 1, top + 90, 170, 27), Color.White, TextFormatFlags.VerticalCenter);
+                    TextRenderer.DrawText(g, "深さ", font10, new Point(left + 174, top + 75), secondary);
+                    TextRenderer.DrawText(g, $"{eew.Depth}km", font16, new Point(left + 172, top + 89), Color.White);
                 }
 
-                font1.Dispose();
-                font2.Dispose();
+                new List<Font> {font9, font10, font14, font16, font20, font23, font40, font19b, font20b, roboto}
+                    .ForEach(x => x.Dispose());
             }
             catch (Exception e)
             {
@@ -549,46 +578,14 @@ time=20180101000000");
                 //失敗してもとりあえず何もしない
             }
         }
-        /*
-        private void SwapImage(Image newImage)
-        {
-            if (this.mainPicbox == null)
-                throw new ArgumentNullException(nameof(this.mainPicbox));
-            var oldImg = this.mainPicbox.Image;
-            this.mainPicbox.Image = newImage;
-            oldImg?.Dispose();
-        }
-
-        /// <summary>
-        /// 強震モニタの画像を取得します。
-        /// </summary>
-        /// <param name="time">取得する時刻</param>
-        /// <returns></returns>
-        private async Task<Bitmap> GetKyoshinMonitorImageAsync(DateTime time)
-        {
-            time = time.AddSeconds(-1);
-            //強震モニタ画像取得
-            string kmoniUrl =
-                $"http://www.kmoni.bosai.go.jp/data/map_img/RealTimeImg/" +
-                $"jma_s/{time:yyyyMMdd}/{time:yyyyMMddHHmmss}.jma_s.gif";
-            Bitmap res = null;
-            try {
-                res = await DownloadImageAsync(kmoniUrl);
-            } catch {
-                res = null;
-            }
-            return res;
-        }
-        */
 
         /// <summary>
         /// 時刻を合わせます。
         /// </summary>
         private async Task SetTime()
         {
-            var str =
-                (await DownloadStringAsync("http://ntp-a1.nict.go.jp/cgi-bin/jst"))
-                .Split('\n')[3];
+            var source = await DownloadStringAsync("http://ntp-a4.nict.go.jp/cgi-bin/jst");
+            var str = Regex.Match(source, "([\\d.]+)").Groups[1].Value;
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();
             _now = time;

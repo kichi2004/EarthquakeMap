@@ -98,7 +98,7 @@ namespace EarthquakeMap
             var eew = new Eew
             {
                 IsWarn = eewobj.alertflg == "警報",
-                MaxIntensity = Enums.Intensity.Parse(eewobj.calcintensity),
+                MaxIntensity = Intensity.Parse(eewobj.calcintensity),
                 Depth = int.Parse(eewobj.depth.Replace("km", "")),
                 IsLast = eewobj.is_final,
                 Coordinate = new Coordinate(float.Parse(eewobj.latitude),
