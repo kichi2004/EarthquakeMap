@@ -23,7 +23,7 @@ using Timer = System.Timers.Timer;
 
 namespace EarthquakeMap
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         internal static ObservationPoint[] ObservationPoints;
         internal static Dictionary<string, string> CityToArea;
@@ -62,7 +62,7 @@ namespace EarthquakeMap
         private Dictionary<string, string> _prefToAreaDictionary;
         private VersionChecker _checker;
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             _ = Handle;

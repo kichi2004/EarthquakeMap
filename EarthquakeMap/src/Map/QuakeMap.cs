@@ -14,7 +14,7 @@ using static System.Math;
 
 namespace EarthquakeMap.Map
 {
-    static class QuakeMap
+    internal static class QuakeMap
     {
         private const int ImageWidth = 8192;
         private const int ImageHeight = 6805;
@@ -168,7 +168,7 @@ namespace EarthquakeMap.Map
                             : Color.White;
 
                         orgCityGraphics.FillEllipse(
-                            new SolidBrush(Form1.Colors[intensity.EnumOrder]),
+                            new SolidBrush(MainForm.Colors[intensity.EnumOrder]),
                             pixel.Key[0] - cityIntSize / 2f + adjustX,
                             pixel.Key[1] - cityIntSize / 2f + adjustY,
                             cityIntSize,
@@ -210,7 +210,7 @@ namespace EarthquakeMap.Map
                             y => y.Place.Select(z => new
                                 {
                                     Place = info.InformationType == InformationType.EarthquakeInfo
-                                        ? Form1.CityToArea.ContainsKey(z) ? Form1.CityToArea[z] : null
+                                        ? MainForm.CityToArea.ContainsKey(z) ? MainForm.CityToArea[z] : null
                                         : z,
                                     x.Intensity
                                 }
@@ -342,7 +342,7 @@ namespace EarthquakeMap.Map
                             : Color.White;
 
                         orgAreaGraphics.FillRectangle(
-                            new SolidBrush(Form1.Colors[intensity.EnumOrder]),
+                            new SolidBrush(MainForm.Colors[intensity.EnumOrder]),
                             pixel.Key[0] - areaIntSize / 2f + adjustX,
                             pixel.Key[1] - areaIntSize / 2f + adjustY,
                             areaIntSize,
