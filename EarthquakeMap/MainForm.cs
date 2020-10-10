@@ -336,9 +336,12 @@ time=20180101000000");
 
                     if (info.InformationType == InformationType.SesimicInfo)
                     {
-                        g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), left, 10, 140, 65);
-                        TextRenderer.DrawText(g, "震度速報",font23, new Rectangle(left, 10, 140, 40), Color.White);
-                        TextRenderer.DrawText(g, $"{info.OriginTime:HH時mm分頃発生}", font12, new Rectangle(left, 50, 140, 20), Color.White);
+                        g.FillRectangle(new SolidBrush(Color.FromArgb(130, Color.Black)), left, 10, 149, 80);
+                        g.DrawRectangle(Pens.White, new Rectangle(left + 8, 15, 131, 45));
+                        TextRenderer.DrawText(g, "震度速報", font20, new Rectangle(left + 2, 10, 145, 55),
+                            Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+                        // TextRenderer.DrawText(g, "震度速報",font23, new Rectangle(left, 10, 140, 40), Color.White);
+                        TextRenderer.DrawText(g, $"{info.OriginTime:HH時mm分頃発生}", font12, new Rectangle(left, 64, 140, 20), Color.White);
                     }
                     else
                     {
@@ -352,7 +355,7 @@ time=20180101000000");
                         var depth = info.Depth == null ? "----" : info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い";
                         TextRenderer.DrawText(g, depth, font14, new Point(left + 180, 55), Color.White);
                         TextRenderer.DrawText(g, "規模", font10, new Point(left + 270, 61), secondary);
-                        TextRenderer.DrawText(g, "M", font11, new Point(left + 301, 60), Color.White);
+                        TextRenderer.DrawText(g, "M", font11, new Point(left + 303, 60), Color.White);
                         TextRenderer.DrawText(g, info.Magnitude == null ? "---" : $"{info.Magnitude:0.0}", font16,
                             new Point(left + 317, 52), Color.White);
                         var tsunamiMessage = "";
@@ -409,7 +412,8 @@ time=20180101000000");
                         }
                         else
                         {
-                            TextRenderer.DrawText(g, "震源情報", font20, new Rectangle(left + 203, 10, 147, 55),
+                            g.DrawRectangle(Pens.White, new Rectangle(left + 8, 15, 131, 45));
+                            TextRenderer.DrawText(g, "震源情報", font20, new Rectangle(left + 2, 10, 145, 55),
                                 Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
                         }
                     }
