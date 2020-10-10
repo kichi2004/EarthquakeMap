@@ -141,7 +141,7 @@ namespace EarthquakeMap.Map
                         }
                     }
 
-                    var font = new Font(new FontFamily("roboto"), cityIntSize * 0.8f, FontStyle.Regular,
+                    var font = new Font(MainForm.RobotoFont, cityIntSize * 0.8f, FontStyle.Regular,
                         GraphicsUnit.Pixel);
                     var sf = new StringFormat
                         {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center};
@@ -312,7 +312,7 @@ namespace EarthquakeMap.Map
                         }
                     }
 
-                    var font = new Font(new FontFamily("roboto"), areaIntSize * 0.8f, FontStyle.Regular,
+                    var font = new Font(MainForm.RobotoFont, areaIntSize * 0.8f, FontStyle.Regular,
                         GraphicsUnit.Pixel);
                     var sf = new StringFormat
                         {Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center};

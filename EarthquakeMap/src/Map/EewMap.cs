@@ -99,7 +99,7 @@ namespace EarthquakeMap.Map
                         orgY -= orgY + cutHeight - ImageHeight;
                     }
                 }
-                var font = new Font(new FontFamily("roboto"), cityIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
+                var font = new Font(MainForm.RobotoFont, cityIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
                 var sf = new StringFormat
                     { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
 
