@@ -17,7 +17,7 @@ using static System.Math;
 
 namespace EarthquakeMap.Map
 {
-    static class EewMap
+    internal static class EewMap
     {
         private const int ImageWidth = 8192;
         private const int ImageHeight = 6805;
@@ -99,7 +99,7 @@ namespace EarthquakeMap.Map
                         orgY -= orgY + cutHeight - ImageHeight;
                     }
                 }
-                var font = new Font(new FontFamily("roboto"), cityIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
+                var font = new Font(MainForm.RobotoFont, cityIntSize * 0.8f, FontStyle.Regular, GraphicsUnit.Pixel);
                 var sf = new StringFormat
                     { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
 
@@ -125,7 +125,7 @@ namespace EarthquakeMap.Map
                         : Color.White;
 
                     orgCityGraphics.FillEllipse(
-                        new SolidBrush(Form1.Colors[intensity.EnumOrder]),
+                        new SolidBrush(MainForm.Colors[intensity.EnumOrder]),
                         pixel.Key[0] - cityIntSize / 2f + adjustX, 
                         pixel.Key[1] - cityIntSize / 2f + adjustY, 
                         cityIntSize,

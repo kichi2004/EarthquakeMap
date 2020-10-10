@@ -1,6 +1,6 @@
 ﻿namespace EarthquakeMap
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// 必要なデザイナー変数です。
@@ -232,7 +232,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "EarthquakeMap";
             ((System.ComponentModel.ISupportInitialize)(this.mainPicbox)).EndInit();
             this.ResumeLayout(false);
