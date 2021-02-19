@@ -16,8 +16,10 @@ using EarthquakeLibrary.Information;
 using EarthquakeMap.Map;
 using EarthquakeMap.Properties;
 using KyoshinMonitorLib;
+using KyoshinMonitorLib.Timers;
 using static EarthquakeMap.Utilities;
 using Timer = System.Timers.Timer;
+using ColorConverter = KyoshinMonitorLib.Images.ColorConverter;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
@@ -59,9 +61,13 @@ namespace EarthquakeMap
         //private bool _cityToAreaFlag;
         private int _myPointIndex;
         private bool _forceInfo;
-        private readonly Timer _timer = new Timer { Interval = 5 * 60 * 1000 };
+        private readonly Timer _waitTimer = new Timer { Interval = 5 * 60 * 1000 };
         private Dictionary<string, string> _prefToAreaDictionary;
         private VersionChecker _checker;
+        private SecondBasedTimer _timer;
+        internal const string ImagePath = @"materials\Jishin\";
+        internal static Image BaseImage { get; private set; }
+
 
         public MainForm()
         {
@@ -83,6 +89,8 @@ namespace EarthquakeMap
                     robotoPfc.AddFontFile(file);
                 RobotoFont = robotoPfc.Families[0];
             }
+
+            BaseImage = Image.FromFile(ImagePath + "Base.png");
 
             ObservationPoints = ObservationPoint.LoadFromMpk(
                 Directory.GetCurrentDirectory() + @"\lib\kyoshin_points", true);
@@ -115,13 +123,10 @@ namespace EarthquakeMap
 
             //設定保存
             FormClosing += SaveSettings;
-            _timer.Elapsed += (s, e) => _forceInfo = true;
+            _waitTimer.Elapsed += (s, e) => _forceInfo = true;
 
-            var timer = new FixedTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(100)
-            };
-            timer.Elapsed += TimerElapsed;
+            _timer = new SecondBasedTimer {Offset = TimeSpan.FromMilliseconds(1500), BlockingMode = false};
+            _timer.Elapsed += TimerElapsed;
 
             CityToArea = Resources.CityToArea.Replace("\r", "").Split('\n')
                 .Select(x => x.Split(',')).Where(x => x.Length == 2)
@@ -175,8 +180,8 @@ time=20180101000000");
 
             try
             {
-                await SetTime();
-                timer.Start();
+                await SetTime(false);
+                _timer.Start(_now);
             }
             catch
             {
@@ -187,7 +192,6 @@ time=20180101000000");
                     {
                         await SetTime();
                         timer2.Stop();
-                        timer.Start();
                     }
                     catch
                     {
@@ -215,33 +219,23 @@ time=20180101000000");
             File.WriteAllText("config/position.txt", $@"{Left},{Top}");
         }
 
-        private async void TimerElapsed()
+        private async Task TimerElapsed(DateTime time)
         {
-            if (_now.Minute == 0 &&
-                _now.Second == 0 && _now.Millisecond <= 100)
+            if((_now.Hour == 6 || _now.Hour == 18) && _now.Minute == 0)
+                _checker.Check();
+            try
             {
-                if((_now.Hour == 6 || _now.Hour == 18) && _now.Minute == 0)
-                    _checker.Check();
-                try
-                {
-                    await SetTime();
-                }
-                catch
-                {
-                    //
-                }
+                await SetTime();
             }
-            else
-                _now = _now.AddSeconds(0.1);
+            catch
+            {
+                //
+            }
+            _now = _now.AddSeconds(1);
 
             Bitmap pic = null;
-            //時刻補正
-            var time = _now;
-            //Console.WriteLine(time.ToString("HH:mm:ss.fff"));
-            if (time.Millisecond > 100) return;
             //できれば予測震度とか載せたいけどとりあえず放置
-            BeginInvoke(new Action(() =>
-                nowtime.Text = _now.ToString("HH:mm:ss")));
+            BeginInvoke(new Action(() => nowtime.Text = _now.ToString("HH:mm:ss")));
 
             //var kmoniImage = await GetKyoshinMonitorImageAsync(time.AddSeconds(-1));
 
@@ -312,7 +306,7 @@ time=20180101000000");
                 if (infoflag)
                 {
                     var info = InformationsChecker.LatestInformation;
-                    if (_timer.Enabled) _timer.Stop();
+                    if (_waitTimer.Enabled) _waitTimer.Stop();
 
                     switch (info.InformationType)
                     {
@@ -429,8 +423,8 @@ time=20180101000000");
                 }
                 else
                 {
-                    _timer.Stop();
-                    _timer.Start();
+                    _waitTimer.Stop();
+                    _waitTimer.Start();
                     var eew = InformationsChecker.LatestEew;
 
                     infotype = eew.IsWarn ? "警報" : "予報";
@@ -440,27 +434,34 @@ time=20180101000000");
                     var estShindo = eew.EstShindo.ToArray();
                     var mypResult = "";
                     var myPoint = estShindo[_myPointIndex];
+                    var val = myPoint?.AnalysisResult;
                     if (myPoint != null)
                     {
-                        var val = myPoint.AnalysisResult;
+                        var intensityValue = val.HasValue
+                            ? (float) ColorConverter.ConvertToIntensityFromScale(val.Value)
+                            : 0;
                         mypResult = "地点予測震度: " +
-                                    Intensity.FromValue(val ?? 0).LongString.Replace("震度", "") +
-                                    $" ({val ?? 0:0.0})";
+                                    Intensity.FromValue(intensityValue).LongString.Replace("震度", "") +
+                                    $" ({intensityValue:0.0})";
                     }
 
                     var res = estShindo.Where(x => x.AnalysisResult >= 0.5);
                     var res2 = checkBox3.Checked
                         ? res
                             .Select(x => (
-                                Region: _prefToAreaDictionary[x.Region],
-                                Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f),
-                                Value: x.AnalysisResult ?? 0.0f
+                                Region: _prefToAreaDictionary[x.ObservationPoint.Region],
+                                Intensity: Intensity.FromValue(
+                                    (float) ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
+                                ),
+                                Value: (float) ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
                             ))
                             .Where(x => x.Region != "null")
                         : res
-                            .Select(x => (x.Region,
-                                    Intensity: Intensity.FromValue(x.AnalysisResult ?? 0.0f),
-                                    Value: x.AnalysisResult ?? 0.0f
+                            .Select(x => (x.ObservationPoint.Region,
+                                    Intensity: Intensity.FromValue(
+                                        (float)ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
+                                    ),
+                                    Value: (float)ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
                                 ));
                     detailText =
                         $"第{eew.Number}報{(eew.IsLast ? "(最終)" : "")} {eew.AnnouncedTime:HH:mm:ss}発報\r\n{mypResult}\r\n\r\n" +
@@ -468,7 +469,8 @@ time=20180101000000");
                             res2
                                 .OrderByDescending(x => x.Value)
                                 .Distinct(new IntensityEqualComparer()).GroupBy(x => x.Item2)
-                                .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"));
+                                .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"
+                        ));
 
                     Bitmap bmp;
                     //地図描画
@@ -596,12 +598,13 @@ time=20180101000000");
         /// <summary>
         /// 時刻を合わせます。
         /// </summary>
-        private async Task SetTime()
+        private async Task SetTime(bool updateTimer = true)
         {
             var source = await DownloadStringAsync("http://ntp-a4.nict.go.jp/cgi-bin/jst");
             var str = Regex.Match(source, "([\\d.]+)").Groups[1].Value;
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();
+            if (updateTimer) _timer.UpdateTime(time);
             _now = time;
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using EarthquakeLibrary;
 using KyoshinMonitorLib;
+using KyoshinMonitorLib.Images;
 
 namespace EarthquakeMap.Objects
 {
