@@ -27,7 +27,6 @@ namespace EarthquakeMap.Map
         private const double LatMax = 46.56;
         private const double LonMin = 121.93;
         private const double LonMax = 149.75;
-        private const string ImagePath = @"materials\Jishin\";
         public static async Task<Bitmap> Draw(bool filter = true)
         {
             return await Task.Run(() => {
@@ -39,9 +38,9 @@ namespace EarthquakeMap.Map
                 ));
                 var (lat, lon) = (latlon[0], latlon[1]);
                 var estshindo = eew.EstShindo;
-                var pointSorted = estshindo.Where(x => x != null && x.AnalysisResult > 0.4)
+                var pointSorted = estshindo.Where(x => x is {AnalysisResult: > 0.4})
                     .OrderBy(x => x.AnalysisResult)
-                    .ToDictionary(x => x.Location, x => Intensity.FromValue(x.AnalysisResult ?? 0f));
+                    .ToDictionary(x => x.ObservationPoint.Location, x => Intensity.FromValue((float) (x.GetResultToIntensity() ?? 0)));
 
                 var pointPixel = pointSorted.ToDictionary(x => ToPixelCoordinate((x.Key.Latitude, x.Key.Longitude)),
                     x => x.Value);
@@ -108,11 +107,10 @@ namespace EarthquakeMap.Map
                 var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
                 orgCityGraphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 orgCityGraphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using (var image = Image.FromFile(ImagePath + "Base.png"))
-                    orgCityGraphics.DrawImage(image, adjustX, adjustY, ImageWidth, ImageHeight);
+                orgCityGraphics.DrawImage(MainForm.BaseImage, adjustX, adjustY, ImageWidth, ImageHeight);
                 Console.WriteLine($"Drawed base image ({sw.ElapsedMilliseconds} ms)");
 
-                orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
+                orgCityGraphics.DrawImage(Image.FromFile(MainForm.ImagePath + "Epicenter.png"),
                     lat - epiSize / 2 + adjustX, lon - epiSize / 2 + adjustY, epiSize, epiSize);
                 foreach (var pixel in pointPixel.Where(kv => kv.Value >= Intensity.Int1))
                 {

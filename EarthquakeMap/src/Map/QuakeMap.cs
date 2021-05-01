@@ -24,7 +24,6 @@ namespace EarthquakeMap.Map
         private const double LatMax = 46.56;
         private const double LonMin = 121.93;
         private const double LonMax = 149.75;
-        private const string ImagePath = @"materials\Jishin\";
 
         private static readonly string[] IntList = {"7", "6強", "6弱", "5強", "5弱", "震度５弱以上未入電", "4", "3", "2", "1"};
 
@@ -149,11 +148,9 @@ namespace EarthquakeMap.Map
                     // 描画
                     var orgCityBitmap = new Bitmap(ImageWidth, ImageHeight);
                     var orgCityGraphics = Graphics.FromImage(orgCityBitmap);
-                    using (var image = Image.FromFile(ImagePath + "Base.png"))
-                        orgCityGraphics.DrawImage(image,
-                            0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
+                    orgCityGraphics.DrawImage(MainForm.BaseImage, 0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
                     //震源描画
-                    orgCityGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
+                    orgCityGraphics.DrawImage(Image.FromFile(MainForm.ImagePath + "Epicenter.png"),
                         epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize, epiSize);
                     //震度描画
                     foreach (var pixel in cityPixel)
@@ -320,13 +317,11 @@ namespace EarthquakeMap.Map
                     // 描画
                     var orgAreaBitmap = new Bitmap(ImageWidth, ImageHeight);
                     var orgAreaGraphics = Graphics.FromImage(orgAreaBitmap);
-                    using (var image = Image.FromFile(ImagePath + "Base.png"))
-                        orgAreaGraphics.DrawImage(image,
-                            0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
+                    orgAreaGraphics.DrawImage(MainForm.BaseImage, 0 + adjustX, 0 + adjustY, ImageWidth, ImageHeight);
 
                     //震源描画
                     if (info.InformationType != InformationType.SesimicInfo)
-                        orgAreaGraphics.DrawImage(Image.FromFile(ImagePath + "Epicenter.png"),
+                        orgAreaGraphics.DrawImage(Image.FromFile(MainForm.ImagePath + "Epicenter.png"),
                             epicenter[0] - epiSize / 2 + adjustX, epicenter[1] - epiSize / 2 + adjustY, epiSize,
                             epiSize);
                     //震度描画

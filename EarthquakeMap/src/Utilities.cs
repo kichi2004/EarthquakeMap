@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -29,10 +30,11 @@ namespace EarthquakeMap
         {
             if (url == null)
                 throw new ArgumentNullException(nameof(url));
-            using (var http = new HttpClient()) {
-                var stream = await http.GetStreamAsync(url).ConfigureAwait(false);
-                return new Bitmap(stream);
-            }
+            using var http = new HttpClient();
+            var res = await http.GetAsync(url).ConfigureAwait(false);
+            var bytes = await res.Content.ReadAsByteArrayAsync();
+            using var stream = new MemoryStream(bytes);
+            return new Bitmap(stream);
         }
     }
 }

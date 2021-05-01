@@ -1,4 +1,6 @@
-﻿using System;
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -8,7 +10,9 @@ using Codeplex.Data;
 using EarthquakeLibrary;
 using EarthquakeLibrary.Information;
 using KyoshinMonitorLib;
+using KyoshinMonitorLib.Images;
 using static EarthquakeMap.Utilities;
+using ColorConverter = KyoshinMonitorLib.Images.ColorConverter;
 
 namespace EarthquakeMap
 {
@@ -20,6 +24,41 @@ namespace EarthquakeMap
         private static int _lastnum;
         private static bool _isLastUnknown;
         private static string _lastId;
+
+        private static unsafe ImageAnalysisResult[] ParseScale(Bitmap bitmap) {
+            var points = MainForm.ObservationPoints.Select(s => new ImageAnalysisResult(s)).ToArray();
+            var data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height),ImageLockMode.ReadOnly,PixelFormat.Format8bppIndexed);
+            var pixelData = new Span<byte>(data.Scan0.ToPointer(), bitmap.Height * bitmap.Width);
+            foreach (var point in points)
+            {
+                if (point.ObservationPoint.Point == null || point.ObservationPoint.IsSuspended)
+                {
+                    point.AnalysisResult = null;
+                    continue;
+                }
+
+                try
+                {
+                    var color = bitmap.Palette.Entries[pixelData[bitmap.Width * point.ObservationPoint.Point.Value.Y + point.ObservationPoint.Point.Value.X]];
+                    point.Color = color;
+                    if (color.A != 255)
+                    {
+                        point.AnalysisResult = null;
+                        continue;
+                    }
+
+                    point.AnalysisResult = ColorConverter.ConvertToScaleAtPolynomialInterpolation(color);
+                }
+                catch
+                {
+                    point.AnalysisResult = null;
+                }
+            }
+
+            bitmap.UnlockBits(data);
+            return points.ToArray();
+        }
+        
         //private static bool a = true;
         internal static async Task<(bool eew, bool info)> Get(DateTime time, bool forceInfo = false, string url = null) {
             //新強震取得
@@ -67,7 +106,6 @@ namespace EarthquakeMap
                 }
 
                 else if (
-
                     LatestInformation == null ||
                     info.OriginTime != LatestInformation.OriginTime ||
                     //info.Announced_time != LatestInformation.Announced_time ||
@@ -94,7 +132,8 @@ namespace EarthquakeMap
             _lastnum = num;
             _lastId = id;
 
-            var task = DownloadImageAsync(UrlGenerator.GenerateEewImage(time));
+            var eewImageUrl = UrlGenerator.GenerateEewImage(time);
+            var eewImage = await DownloadImageAsync(eewImageUrl);
             var eew = new Eew
             {
                 IsWarn = eewobj.alertflg == "警報",
@@ -109,7 +148,7 @@ namespace EarthquakeMap
                 Epicenter = eewobj.region_name,
                 AnnouncedTime = DateTime.Parse(eewobj.report_time),
                 Number = num,
-                EstShindo = MainForm.ObservationPoints.ParseIntensityFromImage(await task)
+                EstShindo = ParseScale(eewImage)
             };
             LatestEew = eew;
             return (true, false);
