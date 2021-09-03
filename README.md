@@ -4,7 +4,10 @@
 
 
 ## ライセンス
-EarthquakeMap ソースコードはMITライセンスに基づき公開しています。
+EarthquakeMap のソースコードは LGPL ライセンスに基づき公開しています．
+
+~~EarthquakeMap ソースコードはMITライセンスに基づき公開しています。~~  
+↑長期間，記述が誤っておりました．
 
 
 ## EarthquakeMap のソースコードを利用される方へ
@@ -14,20 +17,4 @@ EarthquakeMap ソースコードはMITライセンスに基づき公開してい
 - 以下の各依存関係を追加してください．
   - [EarthquakeLibrary](https://github.com/kichi2004/EarthuquakeLibrary)
   - [KyoshinMonitorLib 0.4.0](https://github.com/ingen084/KyoshinMonitorLib/releases/tag/v0.4.0.0)（NuGet でも入手可能）
-
-【MITライセンスについて】
-
-**許可されること**
-- 商用利用
-- 編集
-- 再配布
-- 私的利用
-
-**制限事項**
-- 免責
-- 保証
-(このソースコードを使用して何らかの問題が発生しても作者は一切責任を負いません。) 
-
-**条件**
-- ライセンス及び著作権表示
 
