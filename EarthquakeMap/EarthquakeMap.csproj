@@ -115,6 +115,7 @@
     </Compile>
     <Compile Include="src\InformationsChecker.cs" />
     <Compile Include="src\Map\EewMap.cs" />
+    <Compile Include="src\Map\MapCommon.cs" />
     <Compile Include="src\Objects\Coordinate.cs" />
     <Compile Include="src\Objects\Eew.cs" />
     <Compile Include="src\Program.cs" />
