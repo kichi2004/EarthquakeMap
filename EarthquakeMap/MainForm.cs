@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -7,6 +8,7 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -30,7 +32,7 @@ namespace EarthquakeMap
         internal static ObservationPoint[] ObservationPoints;
         internal static Dictionary<string, string> CityToArea;
         internal static string Url;
-        internal static Dictionary<int, Color> Colors = new Dictionary<int, Color>
+        internal static Dictionary<int, Color> Colors = new()
         {
             {1, Color.FromArgb(70, 100, 110)},
             {2, Color.FromArgb(30, 110, 230)},
@@ -61,7 +63,7 @@ namespace EarthquakeMap
         //private bool _cityToAreaFlag;
         private int _myPointIndex;
         private bool _forceInfo;
-        private readonly Timer _waitTimer = new Timer { Interval = 5 * 60 * 1000 };
+        private readonly Timer _waitTimer = new() { Interval = 5 * 60 * 1000 };
         private Dictionary<string, string> _prefToAreaDictionary;
         private VersionChecker _checker;
         private SecondBasedTimer _timer;
@@ -78,6 +80,11 @@ namespace EarthquakeMap
 
         private async void Initialize()
         {
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            var s = $@"{ver.Major}.{ver.Minor}.{ver.Build}";
+            var rev = ver.Revision > 0 ? $"-dev{ver.Revision}" : "";
+            Text = $"EarthquakeMap {s}{rev}"; 
+            
             var koruriPfc = new PrivateFontCollection();
             koruriPfc.AddFontFile("fonts\\Koruri-Regular.ttf");
             _koruriFont = koruriPfc.Families[0];
@@ -221,27 +228,15 @@ time=20180101000000");
 
         private async Task TimerElapsed(DateTime time)
         {
-            if((_now.Hour == 6 || _now.Hour == 18) && _now.Minute == 0)
+            if (_now.Hour is 6 or 18 && _now.Minute == 0)
                 _checker.Check();
-            try
-            {
-                await SetTime();
-            }
-            catch
-            {
-                //
-            }
             _now = _now.AddSeconds(1);
 
             Bitmap pic = null;
-            //できれば予測震度とか載せたいけどとりあえず放置
-            BeginInvoke(new Action(() => nowtime.Text = _now.ToString("HH:mm:ss")));
-
-            //var kmoniImage = await GetKyoshinMonitorImageAsync(time.AddSeconds(-1));
-
-
+            BeginInvoke(new Action(() => nowtime.Text = (_isTest ? _time : time).ToString("HH:mm:ss")));
+            
             //EEW・地震情報取得
-            string infotype = null, detailText = null;
+            string infotype, detailText;
             bool eewflag, infoflag;
             try
             {
@@ -249,8 +244,6 @@ time=20180101000000");
                 var f = _isFirst;
                 _isFirst = false;
                 (eewflag, infoflag) = await InformationsChecker.Get(_isTest ? _time : time, _forceInfo || f, Url);
-                if (_isTest)
-                    _time = _time.AddSeconds(1);
 
                 if (_forceInfo)
                 {
@@ -264,6 +257,11 @@ time=20180101000000");
             {
                 _isFirst = false;
                 goto last;
+            }
+            finally
+            {
+                if (_isTest)
+                    _time = _time.AddSeconds(1);
             }
 
             if (!infoflag && !eewflag) goto last;
@@ -307,6 +305,7 @@ time=20180101000000");
                 {
                     var info = InformationsChecker.LatestInformation;
                     if (_waitTimer.Enabled) _waitTimer.Stop();
+                    var mapTask = Task.Run(() => QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked));
 
                     switch (info.InformationType)
                     {
@@ -323,8 +322,20 @@ time=20180101000000");
                             goto last;
                     }
 
+                    
+                    var sindDetail = new StringBuilder();
+                    foreach (var sind1 in info.Shindo)
+                    {
+                        sindDetail.Append($"［{sind1.Intensity.LongString}］");
+                        var places = sind1.Place.SelectMany(x => x.Place);
+                        sindDetail.AppendLine(string.Join(" ", places));
+                    }
+
+                    detailText = sindDetail.ToString().TrimEnd();
+                    ReflectText();
+
                     //地図描画
-                    using (var bmp = await Task.Run(() => QuakeMap.Draw(checkBox1.Checked, cityToArea.Checked)))
+                    using (var bmp = await mapTask)
                         if (bmp != null)
                             g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
 
@@ -346,7 +357,13 @@ time=20180101000000");
                             info.Epicenter.Length < 8 ? font16 : font14,
                             new Rectangle(left + 160, 25, 200, 27), Color.White, TextFormatFlags.VerticalCenter);
                         TextRenderer.DrawText(g, "深さ", font10, new Point(left + 150, 61), secondary);
-                        var depth = info.Depth == null ? "----" : info.Depth != 0 ? $"約{info.Depth}km" : "ごく浅い";
+                        var depth = info.Depth switch
+                        {
+                            null => "----",
+                            600 => "≧ 600km",
+                            0 => "ごく浅い",
+                            {} x => $"約{x}km"
+                        };
                         TextRenderer.DrawText(g, depth, font14, new Point(left + 180, 55), Color.White);
                         TextRenderer.DrawText(g, "規模", font10, new Point(left + 270, 61), secondary);
                         TextRenderer.DrawText(g, "M", font11, new Point(left + 303, 60), Color.White);
@@ -411,15 +428,6 @@ time=20180101000000");
                                 Color.White, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
                         }
                     }
-                    var sindDetail = new StringBuilder();
-                    foreach (var sind1 in info.Shindo)
-                    {
-                        sindDetail.Append($"［{sind1.Intensity.LongString}］");
-                        var places = sind1.Place.SelectMany(x => x.Place);
-                        sindDetail.AppendLine(string.Join(" ", places));
-                    }
-
-                    detailText = sindDetail.ToString().TrimEnd();
                 }
                 else
                 {
@@ -430,6 +438,23 @@ time=20180101000000");
                     infotype = eew.IsWarn ? "警報" : "予報";
                     Console.WriteLine($@"緊急地震速報(第{eew.Number}報) {eew.Epicenter} " +
                                       $@"{eew.Depth}km M{eew.Magnitude} {eew.MaxIntensity.LongString}");
+
+
+                    bool redrawFlag = !(
+                        eew.Coordinate.Latitude == _latitude &&
+                        eew.Coordinate.Longitude == _longitude &&
+                        eew.Depth == _depth &&
+                        eew.Magnitude == _magnitude &&
+                        eew.MaxIntensity.Equals(_lastIntensity)
+                    );
+                    
+                    Bitmap bmp = null;
+                    Task<Bitmap> task = null;
+                    if (!redrawFlag)
+                        bmp = _lastBitmap;
+                    else
+                        task = Task.Run(() => EewMap.Draw(checkBox2.Checked));
+
                     //EEW予測震度画像を取得・解析
                     var estShindo = eew.EstShindo.ToArray();
                     var mypResult = "";
@@ -445,24 +470,20 @@ time=20180101000000");
                                     $" ({intensityValue:0.0})";
                     }
 
-                    var res = estShindo.Where(x => x.AnalysisResult >= 0.5);
+                    var res = estShindo
+                        .Select(x => new
+                            {
+                                x.ObservationPoint.Region,
+                                Intensity = (float) (x.GetResultToIntensity() ?? 0)
+                            }
+                        )
+                        .Where(x => x.Intensity >= 0.5);
                     var res2 = checkBox3.Checked
                         ? res
-                            .Select(x => (
-                                Region: _prefToAreaDictionary[x.ObservationPoint.Region],
-                                Intensity: Intensity.FromValue(
-                                    (float) ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
-                                ),
-                                Value: (float) ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
-                            ))
+                            .Select(x => (Region: _prefToAreaDictionary[x.Region], Intensity: Intensity.FromValue(x.Intensity), Value: x.Intensity))
                             .Where(x => x.Region != "null")
                         : res
-                            .Select(x => (x.ObservationPoint.Region,
-                                    Intensity: Intensity.FromValue(
-                                        (float)ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
-                                    ),
-                                    Value: (float)ColorConverter.ConvertToIntensityFromScale(x.AnalysisResult ?? 0)
-                                ));
+                            .Select(x => (x.Region, Intensity: Intensity.FromValue(x.Intensity), Value: x.Intensity));
                     detailText =
                         $"第{eew.Number}報{(eew.IsLast ? "(最終)" : "")} {eew.AnnouncedTime:HH:mm:ss}発報\r\n{mypResult}\r\n\r\n" +
                         string.Join("\r\n",
@@ -472,24 +493,13 @@ time=20180101000000");
                                 .Select(x => $"［{x.Key.LongString}］{string.Join(" ", x.Select(y => y.Item1))}"
                         ));
 
-                    Bitmap bmp;
-                    //地図描画
-                    if (eew.Coordinate.Latitude == _latitude &&
-                        eew.Coordinate.Longitude == _longitude &&
-                        eew.Depth == _depth &&
-                        eew.Magnitude == _magnitude &&
-                        eew.MaxIntensity.Equals(_lastIntensity) &&
-                        eew.IsWarn == _isWarn &&
-                        eew.OccurrenceTime == _lastTime)
-                    {
-                        bmp = _lastBitmap;
-                    }
-                    else
-                    {
-                        bmp = await Task.Run(() => EewMap.Draw(checkBox2.Checked));
-                        _lastBitmap = bmp;
-                    }
+                    ReflectText();
 
+                    //地図描画
+                    if (redrawFlag) _lastBitmap = bmp = await task;
+
+                    Console.WriteLine("Information Draw");
+                    var sw = Stopwatch.StartNew();
                     g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
 
                     _latitude = eew.Coordinate.Latitude;
@@ -535,14 +545,15 @@ time=20180101000000");
 
                     TextRenderer.DrawText(g, "M", font20, new Point(left + 145, top + 36), Color.White);
                     TextRenderer.DrawText(g, $"{eew.Magnitude:0.0}", font40, new Point(left + 166, top + 7), Color.White);
-                    TextRenderer.DrawText(g, $"{eew.OccurrenceTime:HH:mm:ss}発生", font9, new Rectangle(left, top, 260, 15),
-                        Color.White, TextFormatFlags.Right);
+                    TextRenderer.DrawText(g, $"{eew.OccurrenceTime:HH:mm:ss}発生", font9, 
+                        new Rectangle(left, top, 260, 15), Color.White, TextFormatFlags.Right);
                     TextRenderer.DrawText(g, "震源地", font10, new Point(left + 1, top + 75), secondary);
-                    TextRenderer.DrawText(g, eew.Epicenter,
-                        eew.Epicenter.Length < 8 ? font16 : font12,
+                    TextRenderer.DrawText(g, eew.Epicenter, eew.Epicenter.Length < 8 ? font16 : font12,
                         new Rectangle(left + 1, top + 90, 170, 27), Color.White, TextFormatFlags.VerticalCenter);
                     TextRenderer.DrawText(g, "深さ", font10, new Point(left + 174, top + 75), secondary);
                     TextRenderer.DrawText(g, $"{eew.Depth}km", font16, new Point(left + 172, top + 89), Color.White);
+
+                    Console.WriteLine($"Complete ({sw.ElapsedMilliseconds} ms)");
                 }
 
                 new List<Font> {font9, font10, font14, font16, font20, font23, font40, font19b, font20b, roboto}
@@ -554,10 +565,7 @@ time=20180101000000");
                 Console.WriteLine(e);
             }
 
-            last:
-            //フォーム関連は最後にまとめて
-            try
-            {
+            void ReflectText() =>
                 BeginInvoke(new Action(() =>
                 {
                     if (IsDisposed) return;
@@ -582,6 +590,14 @@ time=20180101000000");
 
                     if (detailText != null)
                         detailTextBox.Text = detailText;
+                }));
+
+            last:
+            try
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    if (IsDisposed) return;
                     if (pic == null) return;
                     var old = _mainBitmap;
                     _mainBitmap = pic;
@@ -600,7 +616,7 @@ time=20180101000000");
         /// </summary>
         private async Task SetTime(bool updateTimer = true)
         {
-            var source = await DownloadStringAsync("http://ntp-a4.nict.go.jp/cgi-bin/jst");
+            var source = await DownloadStringAsync("http://ntp-b1.nict.go.jp/cgi-bin/jst");
             var str = Regex.Match(source, "([\\d.]+)").Groups[1].Value;
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();

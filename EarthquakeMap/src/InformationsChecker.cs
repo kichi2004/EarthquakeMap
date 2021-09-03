@@ -23,7 +23,7 @@ namespace EarthquakeMap
 
         private static int _lastnum;
         private static bool _isLastUnknown;
-        private static string _lastId;
+        private static int _lastId;
 
         private static unsafe ImageAnalysisResult[] ParseScale(Bitmap bitmap) {
             var points = MainForm.ObservationPoints.Select(s => new ImageAnalysisResult(s)).ToArray();
@@ -66,7 +66,7 @@ namespace EarthquakeMap
             var eewobj = DynamicJson.Parse(eewJson);
             var infoflag = false;
             //地震情報取得
-            var info = !forceInfo && time.Second % 20 != 0
+            NewEarthquakeInformation info = !forceInfo && time.Second % 20 != 0
                 ? null
                 : await Information.GetNewEarthquakeInformationFromYahooAsync(
                     url ?? Information.YahooUrl
@@ -122,9 +122,9 @@ namespace EarthquakeMap
 
             if (infoflag) return (false, true);
             var num = 0;
-            string id = null;
+            int id = -1;
             if (eewobj.result.message == "データがありません" ||
-                (num = int.Parse(eewobj.report_num)) == _lastnum && (id = eewobj.report_id) == _lastId) {
+                (num = int.Parse(eewobj.report_num)) == _lastnum && (id = int.Parse(eewobj.report_id)) <= _lastId) {
                 _lastnum = num;
                 _lastId = id;
                 return (false, false);
