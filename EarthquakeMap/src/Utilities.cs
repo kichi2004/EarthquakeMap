@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace EarthquakeMap
@@ -17,8 +18,9 @@ namespace EarthquakeMap
         {
             if (url == null)
                 throw new ArgumentNullException(nameof(url));
-            using (var http = new HttpClient())
-                return await http.GetStringAsync(url).ConfigureAwait(false);
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("User-Agent", $"EarthquakeMap/{Version}");
+            return await http.GetStringAsync(url).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -35,6 +37,15 @@ namespace EarthquakeMap
             var bytes = await res.Content.ReadAsByteArrayAsync();
             using var stream = new MemoryStream(bytes);
             return new Bitmap(stream);
+        }
+
+        internal static string Version
+        {
+            get
+            {
+                var ver = Assembly.GetExecutingAssembly().GetName().Version;
+                return $@"{ver.Major}.{ver.Minor}.{ver.Build}" + (ver.Revision > 0 ? $"-dev{ver.Revision}" : "");
+            }
         }
     }
 }
