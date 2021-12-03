@@ -83,8 +83,12 @@ namespace EarthquakeMap
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             var s = $@"{ver.Major}.{ver.Minor}.{ver.Build}";
             var rev = ver.Revision > 0 ? $"-dev{ver.Revision}" : "";
-            Text = $"EarthquakeMap {s}{rev}"; 
-            
+            Text = $"EarthquakeMap {s}{rev}";
+
+
+            _checker = new VersionChecker();
+            _checker.Check();
+
             var koruriPfc = new PrivateFontCollection();
             koruriPfc.AddFontFile("fonts\\Koruri-Regular.ttf");
             _koruriFont = koruriPfc.Families[0];
@@ -206,9 +210,6 @@ time=20180101000000");
                     }
                 };
             }
-
-            _checker = new VersionChecker();
-            _checker.Check();
         }
 
         private void SaveSettings(object s, FormClosingEventArgs e)
@@ -616,7 +617,7 @@ time=20180101000000");
         /// </summary>
         private async Task SetTime(bool updateTimer = true)
         {
-            var source = await DownloadStringAsync("http://ntp-b1.nict.go.jp/cgi-bin/jst");
+            var source = await DownloadStringAsync("https://svs.ingen084.net/time/");
             var str = Regex.Match(source, "([\\d.]+)").Groups[1].Value;
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(double.Parse(str)).ToLocalTime();
