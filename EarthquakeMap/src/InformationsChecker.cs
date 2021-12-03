@@ -124,7 +124,7 @@ namespace EarthquakeMap
             var num = 0;
             int id = -1;
             if (eewobj.result.message == "データがありません" ||
-                (num = int.Parse(eewobj.report_num)) == _lastnum && (id = int.Parse(eewobj.report_id)) <= _lastId) {
+                (num = int.Parse(eewobj.report_num)) <= _lastnum && (id = int.Parse(eewobj.report_id)) == _lastId) {
                 _lastnum = num;
                 _lastId = id;
                 return (false, false);
